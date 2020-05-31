@@ -15,12 +15,24 @@ void setup() {
     while (1)
       ;
   }
+
+  bme.getTemperatureSensor()->printSensorDetails();
+  bme.getHumiditySensor()->printSensorDetails();
+  bme.getPressureSensor()->printSensorDetails();
 }
 
 void loop() {
-  Serial.print("Temperature = ");
+  Serial.print("\nTemperature = ");
   Serial.print(bme.readTemperature());
-  Serial.println(" °C");
+  Serial.print(" °C");
+
+  Serial.print("    Humidity = ");
+  Serial.print(bme.readHumidity());
+  Serial.print(" %");
+
+  Serial.print("    Pressure = ");
+  Serial.print(bme.readPressure()/100);
+  Serial.print(" hPa");
 
   delay(2000);
 }

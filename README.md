@@ -12,6 +12,12 @@ A legendary IoT monitoring station with e-Paper dashboard and anomaly-detection,
 
 ## Hardware setup
 
+### Parts
+
+- [SIM800L T-Call V1.3 ESP32](https://www.ebay.de/itm/SIM800L-T-Call-V1-3-ESP32-WLAN-Bluetooth-Funkmodul-GPRS-Antenne-SIM-Karte/143610289741)
+- [Waveshare 4.2" 400×300 ePaper Display](https://www.berrybase.de/raspberry-pi-co/raspberry-pi/displays/4.2-400-215-300-epaper-display-modul-mit-spi-interface-dreifarbig-40-gelb-schwarz-wei-223?c=320&px=m)
+- [BME280 Breakout Board](https://www.berrybase.de/bauelemente/sensoren-module/feuchtigkeit/bme280-breakout-board-3in1-sensor-f-252-r-temperatur-luftfeuchtigkeit-und-luftdruck)
+
 ### Preliminary Version
 
 ![Breadboard](docs/legendary-dashboard_bb.png)
@@ -50,6 +56,11 @@ $ platformio remote agent start 2>&1 >/dev/null &
 ```
 
 ## References
+
+### SIM800L T-Call V1.3 ESP32
+
+ - [LilyGo T-Call SIM800L](https://github.com/Xinyuan-LilyGO/LilyGo-T-Call-SIM800L)
+ - [Pinout - LilyGo T-Call SIM800L](https://raw.githubusercontent.com/Xinyuan-LilyGO/LilyGo-T-Call-SIM800L/master/image/SIM800L_IP.jpg)
 
 ### BME280 Environmental sensor
 
