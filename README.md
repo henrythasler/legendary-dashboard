@@ -61,6 +61,7 @@ $ platformio remote agent start 2>&1 >/dev/null &
 
  - [LilyGo T-Call SIM800L](https://github.com/Xinyuan-LilyGO/LilyGo-T-Call-SIM800L)
  - [Pinout - LilyGo T-Call SIM800L](https://raw.githubusercontent.com/Xinyuan-LilyGO/LilyGo-T-Call-SIM800L/master/image/SIM800L_IP.jpg)
+ - [ESP32 Publish Data to Cloud without Wi-Fi](https://randomnerdtutorials.com/esp32-sim800l-publish-data-to-cloud/)
 
 ### BME280 Environmental sensor
 
