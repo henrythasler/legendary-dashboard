@@ -10,6 +10,12 @@ A legendary IoT monitoring station with e-Paper dashboard and anomaly-detection,
  2. [Install PlatformIO IDE extension](https://platformio.org/install/ide?install=vscode) for Visual Studio Code.
  3. Clone this repo (`git clone https://github.com/henrythasler/legendary-dashboard.git`), open folder in Visual Studio Code.
 
+## Hardware setup
+
+### Preliminary Version
+
+![Breadboard](docs/legendary-dashboard_bb.png)
+
 ## Setting up a Raspberry Pi as PIO remote agent
 
 > "[PIO Remote](https://docs.platformio.org/en/latest/plus/pio-remote.html) allows you to work remotely with devices from Anywhere In The World."
