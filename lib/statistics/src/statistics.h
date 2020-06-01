@@ -7,8 +7,8 @@ class Statistics
 {
 public:
   Statistics() {}
-  float min = FLT_MAX;
-  float max = FLT_MIN;
+  float min = float(1e12);
+  float max = float(-1e12);
   void update(float value);
 };
 #endif

@@ -12,15 +12,15 @@ Statistics stats;
 // }
 
 void test_function_statistics_initial(void) {
-    TEST_ASSERT_EQUAL(1e9, stats.min);
-    TEST_ASSERT_EQUAL(-1e9, stats.max);
+    TEST_ASSERT_EQUAL(float(1e12), stats.min);
+    TEST_ASSERT_EQUAL(float(-1e12), stats.max);
 }
 
 void test_function_statistics_simple(void) {
     stats.update(0);
     stats.update(1);
-    TEST_ASSERT_EQUAL(0, stats.min);
-    TEST_ASSERT_EQUAL(1, stats.max);
+    TEST_ASSERT_EQUAL(0., stats.min);
+    TEST_ASSERT_EQUAL(1., stats.max);
 }
 
 int main(int argc, char **argv) {
