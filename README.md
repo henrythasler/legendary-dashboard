@@ -10,6 +10,12 @@ A legendary IoT monitoring station with e-Paper dashboard and anomaly-detection,
  2. [Install PlatformIO IDE extension](https://platformio.org/install/ide?install=vscode) for Visual Studio Code.
  3. Clone this repo (`git clone https://github.com/henrythasler/legendary-dashboard.git`), open folder in Visual Studio Code.
 
+To enable token authentication for [PIO Remote](https://docs.platformio.org/en/latest/plus/pio-remote.html), the environment variable [PLATFORMIO_AUTH_TOKEN](https://docs.platformio.org/en/latest/envvars.html?utm_medium=piohome&utm_source=platformio#envvar-PLATFORMIO_AUTH_TOKEN) must be set before launching Visual Studio Code:
+
+```
+$ PLATFORMIO_AUTH_TOKEN=yourtokenhere code
+```
+
 ## Hardware setup
 
 ### Parts
@@ -48,6 +54,12 @@ Log-in and run agent:
 ```
 $ platformio account login -u USER -p PASS
 $ platformio remote agent start
+```
+
+Run agent with [PLATFORMIO_AUTH_TOKEN](https://docs.platformio.org/en/latest/envvars.html?utm_medium=piohome&utm_source=platformio#envvar-PLATFORMIO_AUTH_TOKEN):
+
+```
+$ PLATFORMIO_AUTH_TOKEN=yourtoken platformio remote agent start
 ```
 
 Run in background:
