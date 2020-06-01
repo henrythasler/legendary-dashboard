@@ -6,9 +6,9 @@
 class Statistics
 {
 public:
-  Statistics() {}
-  float min = 1e12;
-  float max = -1e12;
+  float min;
+  float max;
+  Statistics();
   void update(float value);
 };
 #endif
