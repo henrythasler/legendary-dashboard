@@ -24,9 +24,9 @@ $ PLATFORMIO_AUTH_TOKEN=yourtokenhere code
 - [Waveshare 4.2" 400×300 ePaper Display](https://www.berrybase.de/raspberry-pi-co/raspberry-pi/displays/4.2-400-215-300-epaper-display-modul-mit-spi-interface-dreifarbig-40-gelb-schwarz-wei-223?c=320&px=m)
 - [BME280 Breakout Board](https://www.berrybase.de/bauelemente/sensoren-module/feuchtigkeit/bme280-breakout-board-3in1-sensor-f-252-r-temperatur-luftfeuchtigkeit-und-luftdruck)
 
-### Preliminary Version
+### Schematic
 
-![Breadboard](docs/legendary-dashboard_bb.png)
+![Breadboard](docs/legendary-dashboard-ESP32_bb.png)
 
 ## Setting up a Raspberry Pi as PIO remote agent
 
@@ -69,6 +69,10 @@ $ platformio remote agent start 2>&1 >/dev/null &
 
 ## References
 
+### ESP32
+
+ - [ESP32 Pinout Reference](https://randomnerdtutorials.com/esp32-pinout-reference-gpios/)
+
 ### SIM800L T-Call V1.3 ESP32
 
  - [LilyGo T-Call SIM800L](https://github.com/Xinyuan-LilyGO/LilyGo-T-Call-SIM800L)
@@ -80,6 +84,7 @@ $ platformio remote agent start 2>&1 >/dev/null &
  - [Datasheet (PDF)](https://cdn-shop.adafruit.com/datasheets/BST-BME280_DS001-10.pdf)
  - [Create A Simple ESP8266 Weather Station With BME280](https://lastminuteengineers.com/bme280-esp8266-weather-station/)
  - [Adafruit BME280 Humidity + Barometric Pressure + Temperature Sensor Breakout](https://learn.adafruit.com/adafruit-bme280-humidity-barometric-pressure-temperature-sensor-breakout/arduino-test)
+ - [ESP32 I2C Communication](https://randomnerdtutorials.com/esp32-i2c-communication-arduino-ide/)
 
 ### Raspberry Pi
 
