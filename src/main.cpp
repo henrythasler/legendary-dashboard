@@ -1,4 +1,5 @@
 #include <Arduino.h>
+// #include <Wire.h>
 
 #define LED_BUILTIN (13) // LED is connected to IO13
 
@@ -15,6 +16,20 @@
 TwoWire I2CBME = TwoWire(0); // set up a new Wire-Instance for BME280 Environment Sensor
 Adafruit_BME280 bme;         // use I2C
 bool environmentSensorAvailable = false;
+
+// Display stuff
+#define ENABLE_GxEPD2_GFX 0
+
+#include <GxEPD2_BW.h>
+#include <GxEPD2_3C.h>
+#include <Fonts/FreeMonoBold9pt7b.h>
+GxEPD2_3C<GxEPD2_420c, GxEPD2_420c::HEIGHT> display(GxEPD2_420c(/*CS=5*/ 5, /*DC=*/ 4, /*RST=*/ 0, /*BUSY=*/ 2));
+
+// FreeFonts from Adafruit_GFX
+#include <Fonts/FreeMonoBold9pt7b.h>
+#include <Fonts/FreeMonoBold12pt7b.h>
+#include <Fonts/FreeMonoBold18pt7b.h>
+#include <Fonts/FreeMonoBold24pt7b.h>
 
 // Statistics Helper-Class
 #include <statistics.h>
@@ -33,6 +48,7 @@ uint32_t initStage = 0;
 
 // Flow control, basic task scheduler
 #define SCHEDULER_MAIN_LOOP_MS (10) // ms
+bool toggle = false;
 
 // run once on startup
 void setup()
@@ -73,6 +89,11 @@ void setup()
   {
     Serial.println("[ ERROR ] - Could not find a BME280 sensor, check wiring!");
   }
+  initStage++;
+
+
+  display.init(115200);
+  display.clearScreen();  
 
   initStage++; // Init complete
   Serial.print("[ INIT ] - Completed at stage ");
@@ -85,6 +106,7 @@ void setup()
 void loop()
 {
   frameCounter++;
+  toggle = toggle ^ 1;
 
   // 100ms Tasks
   if (!(frameCounter % (100 / SCHEDULER_MAIN_LOOP_MS)))

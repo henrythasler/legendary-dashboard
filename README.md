@@ -24,7 +24,7 @@ $ PLATFORMIO_AUTH_TOKEN=yourtokenhere code
 - [Waveshare 4.2" 400×300 ePaper Display](https://www.berrybase.de/raspberry-pi-co/raspberry-pi/displays/4.2-400-215-300-epaper-display-modul-mit-spi-interface-dreifarbig-40-gelb-schwarz-wei-223?c=320&px=m)
 - [BME280 Breakout Board](https://www.berrybase.de/bauelemente/sensoren-module/feuchtigkeit/bme280-breakout-board-3in1-sensor-f-252-r-temperatur-luftfeuchtigkeit-und-luftdruck)
 
-### Schematic
+### Wire Diagram
 
 ![Breadboard](docs/legendary-dashboard-ESP32_bb.png)
 
