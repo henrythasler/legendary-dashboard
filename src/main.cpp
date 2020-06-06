@@ -31,6 +31,9 @@ uint32_t frameCounter = 0;
 // Track initialisation
 uint32_t initStage = 0;
 
+// Flow control, basic task scheduler
+#define SCHEDULER_MAIN_LOOP_MS (10) // ms
+
 // run once on startup
 void setup()
 {
@@ -74,6 +77,7 @@ void setup()
   initStage++; // Init complete
   Serial.print("[ INIT ] - Completed at stage ");
   Serial.println(initStage);
+  Serial.println();
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED;
 }
 
@@ -82,10 +86,25 @@ void loop()
 {
   frameCounter++;
 
-  if (!(frameCounter % 2))
+  // 100ms Tasks
+  if (!(frameCounter % (100 / SCHEDULER_MAIN_LOOP_MS)))
+  {
+    digitalWrite(LED_BUILTIN, HIGH);
+  }
+
+  // 500ms Tasks
+  if (!(frameCounter % (500 / SCHEDULER_MAIN_LOOP_MS)))
+  {
+  }
+
+  // 2s Tasks
+  if (!(frameCounter % (2000 / SCHEDULER_MAIN_LOOP_MS)))
   {
     if (environmentSensorAvailable)
     {
+      // indicate measurement
+      digitalWrite(LED_BUILTIN, LOW);
+
       // read current measurements
       currentTemperatureCelsius = bme.readTemperature();
       currentHumidityPercent = bme.readHumidity();
@@ -96,33 +115,21 @@ void loop()
       humStats.update(currentHumidityPercent);
       pressStats.update(currentPressurePascal / 100.); // use hPa
 
-      Serial.print("\nTemperature = ");
+      Serial.print("Temperature = ");
       Serial.print(currentTemperatureCelsius);
-      Serial.print(" °C (▼");
-      Serial.print(tempStats.min);
-      Serial.print(" ▲");
-      Serial.print(tempStats.max);
-      Serial.print(")");
+      Serial.print(" °C");
 
       Serial.print("    Humidity = ");
       Serial.print(currentHumidityPercent);
-      Serial.print(" % (▼");
-      Serial.print(humStats.min);
-      Serial.print(" ▲");
-      Serial.print(humStats.max);
-      Serial.print(")");
+      Serial.print(" %");
 
       Serial.print("    Pressure = ");
       Serial.print(currentPressurePascal / 100.); // convert to hPa
-      Serial.print(" hPa (▼");
-      Serial.print(pressStats.min);
-      Serial.print(" ▲");
-      Serial.print(pressStats.max);
-      Serial.print(")");
+      Serial.print(" hPa");
 
       Serial.print("    Altitude = ");
       Serial.print(bme.readAltitude(SEALEVEL_PRESSURE + SEALEVEL_PRESSURE_CALIBRATION));
-      Serial.print(" m");
+      Serial.println(" m");
     }
     else
     {
@@ -130,5 +137,5 @@ void loop()
     }
   }
 
-  delay(1000);
+  delay(SCHEDULER_MAIN_LOOP_MS);
 }
