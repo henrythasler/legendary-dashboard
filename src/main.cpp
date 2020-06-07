@@ -1,5 +1,4 @@
 #include <Arduino.h>
-// #include <Wire.h>
 
 #define LED_BUILTIN (13) // LED is connected to IO13
 
@@ -18,12 +17,17 @@ Adafruit_BME280 bme;         // use I2C
 bool environmentSensorAvailable = false;
 
 // Display stuff
-#define ENABLE_GxEPD2_GFX 0
+#include <GxEPD.h>
+#include <GxGDEW042Z15/GxGDEW042Z15.h> // 4.2" b/w/r
+#include <GxIO/GxIO_SPI/GxIO_SPI.h>
+#include <GxIO/GxIO.h>
+#include GxEPD_BitmapExamples
 
-#include <GxEPD2_BW.h>
-#include <GxEPD2_3C.h>
-#include <Fonts/FreeMonoBold9pt7b.h>
-GxEPD2_3C<GxEPD2_420c, GxEPD2_420c::HEIGHT> display(GxEPD2_420c(/*CS=5*/ 5, /*DC=*/ 4, /*RST=*/ 0, /*BUSY=*/ 2));
+// MOSI=15
+// SCK=14
+GxIO_Class io(SPI, /*CS*/ 19, /*DC*/ 18, /*RST*/ 0);
+GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
+#define HAS_RED_COLOR
 
 // FreeFonts from Adafruit_GFX
 #include <Fonts/FreeMonoBold9pt7b.h>
@@ -41,14 +45,14 @@ Statistics pressStats;
 float currentTemperatureCelsius = 0;
 float currentHumidityPercent = 0;
 float currentPressurePascal = 0;
-uint32_t frameCounter = 0;
 
 // Track initialisation
 uint32_t initStage = 0;
 
 // Flow control, basic task scheduler
 #define SCHEDULER_MAIN_LOOP_MS (10) // ms
-bool toggle = false;
+uint32_t counterBase = 0;
+uint32_t counter30s = 0;
 
 // run once on startup
 void setup()
@@ -91,9 +95,12 @@ void setup()
   }
   initStage++;
 
-
+  delay(100);
   display.init(115200);
-  display.clearScreen();  
+  display.setTextColor(GxEPD_BLACK);  
+  display.setFont(&FreeMonoBold18pt7b);
+  display.eraseDisplay();
+  delay(100);
 
   initStage++; // Init complete
   Serial.print("[ INIT ] - Completed at stage ");
@@ -105,22 +112,21 @@ void setup()
 // run forever
 void loop()
 {
-  frameCounter++;
-  toggle = toggle ^ 1;
+  counterBase++;
 
   // 100ms Tasks
-  if (!(frameCounter % (100 / SCHEDULER_MAIN_LOOP_MS)))
+  if (!(counterBase % (100 / SCHEDULER_MAIN_LOOP_MS)))
   {
     digitalWrite(LED_BUILTIN, HIGH);
   }
 
   // 500ms Tasks
-  if (!(frameCounter % (500 / SCHEDULER_MAIN_LOOP_MS)))
+  if (!(counterBase % (500 / SCHEDULER_MAIN_LOOP_MS)))
   {
   }
 
   // 2s Tasks
-  if (!(frameCounter % (2000 / SCHEDULER_MAIN_LOOP_MS)))
+  if (!(counterBase % (2000 / SCHEDULER_MAIN_LOOP_MS)))
   {
     if (environmentSensorAvailable)
     {
@@ -157,6 +163,17 @@ void loop()
     {
       Serial.println("Environment sensor not available.");
     }
+  }
+
+  // 30s Tasks
+  if (!(counterBase % (30000L / SCHEDULER_MAIN_LOOP_MS)))
+  {
+    counter30s++;
+    display.drawExampleBitmap(BitmapExample1, 0, 0, 400, 300, GxEPD_BLACK);
+    display.setCursor(0, 0);
+    display.println();
+    display.printf("%.1f°C",currentTemperatureCelsius);
+    display.updateWindow(0,0,128,128);
   }
 
   delay(SCHEDULER_MAIN_LOOP_MS);
