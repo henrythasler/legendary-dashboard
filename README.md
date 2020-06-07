@@ -88,6 +88,12 @@ $ platformio remote agent start 2>&1 >/dev/null &
  - [Adafruit BME280 Humidity + Barometric Pressure + Temperature Sensor Breakout](https://learn.adafruit.com/adafruit-bme280-humidity-barometric-pressure-temperature-sensor-breakout/arduino-test)
  - [ESP32 I2C Communication](https://randomnerdtutorials.com/esp32-i2c-communication-arduino-ide/)
 
+### Waveshare ePaper Display
+
+ - [Waveshare 4.2inch e-Paper Module](https://www.waveshare.com/product/4.2inch-e-paper-module-b.htm)
+ - [GxEPD E-Paper display library](https://github.com/ZinggJM/GxEPD)
+ - [image2cpp](http://javl.github.io/image2cpp/)
+
 ### Raspberry Pi
 
 - [Video Streaming with Raspberry Pi Camera](https://randomnerdtutorials.com/video-streaming-with-raspberry-pi-camera/)
