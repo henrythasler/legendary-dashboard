@@ -5,8 +5,9 @@
 // Environment sensor includes and defines
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
-#define I2C_SCL (32)
-#define I2C_SDA (33)
+#define BME280_PIN_I2C_SCL (32)
+#define BME280_PIN_I2C_SDA (33)
+#define BME280_PIN_VCC (25)
 #define BME280_ADDR (0x76)
 #define PRESSURE_MEASUREMENT_CALIBRATION (6000)
 #define SEALEVEL_PRESSURE (1013.25)
@@ -21,10 +22,8 @@ bool environmentSensorAvailable = false;
 #include <GxGDEW042Z15/GxGDEW042Z15.h> // 4.2" b/w/r
 #include <GxIO/GxIO_SPI/GxIO_SPI.h>
 #include <GxIO/GxIO.h>
-#include GxEPD_BitmapExamples
 
-// MOSI=15
-// SCK=14
+// platformIO board definition: MOSI=15 SCK=14
 GxIO_Class io(SPI, /*CS*/ 19, /*DC*/ 18, /*RST*/ 0);
 GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #define HAS_RED_COLOR
@@ -34,6 +33,7 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <Fonts/FreeMonoBold12pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeMonoBold24pt7b.h>
+#include <Fonts/FreeSans18pt7b.h>
 
 // Statistics Helper-Class
 #include <statistics.h>
@@ -68,7 +68,11 @@ void setup()
   initStage++;
 
   // Initialize Environment Sensor
-  if (I2CBME.begin(I2C_SDA, I2C_SCL, 250000U)) // set I2C-Clock to 250kHz
+  pinMode(BME280_PIN_VCC, OUTPUT);
+  digitalWrite(BME280_PIN_VCC, HIGH); // Power-Supply via GPIO (BME280 uses less than 1mA).
+  delay(5);                           // wait for BMW280 to power up. Takes around 2ms.
+
+  if (I2CBME.begin(BME280_PIN_I2C_SDA, BME280_PIN_I2C_SCL, 250000U)) // set I2C-Clock to 250kHz
   {
     initStage++;
     if (bme.begin(BME280_ADDR, &I2CBME)) // use custom Wire-Instance to avoid interference with other libraries.
@@ -97,9 +101,10 @@ void setup()
 
   delay(100);
   display.init(115200);
-  display.setTextColor(GxEPD_BLACK);  
+  display.setTextColor(GxEPD_BLACK);
   display.setFont(&FreeMonoBold18pt7b);
-  display.eraseDisplay();
+  display.fillScreen(GxEPD_WHITE);
+  display.eraseDisplay(true);
   delay(100);
 
   initStage++; // Init complete
@@ -169,11 +174,15 @@ void loop()
   if (!(counterBase % (30000L / SCHEDULER_MAIN_LOOP_MS)))
   {
     counter30s++;
-    display.drawExampleBitmap(BitmapExample1, 0, 0, 400, 300, GxEPD_BLACK);
-    display.setCursor(0, 0);
-    display.println();
-    display.printf("%.1f°C",currentTemperatureCelsius);
-    display.updateWindow(0,0,128,128);
+    display.fillRoundRect(0, 0, 128, 64, 10, GxEPD_BLACK);
+    display.fillRoundRect(2, 2, 124, 60, 8, GxEPD_RED);
+    display.setCursor(4, 40);
+    display.setFont(&FreeMonoBold18pt7b);
+    display.printf("%.1f°C", currentTemperatureCelsius);
+    display.setFont(&FreeSans18pt7b);
+    display.setCursor(4, 100);
+    display.print("Hallo Huy!");
+    display.update();
   }
 
   delay(SCHEDULER_MAIN_LOOP_MS);
