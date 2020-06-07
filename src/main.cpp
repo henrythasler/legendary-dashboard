@@ -170,8 +170,8 @@ void loop()
     }
   }
 
-  // 30s Tasks
-  if (!(counterBase % (30000L / SCHEDULER_MAIN_LOOP_MS)))
+  // 180s Tasks
+  if (!(counterBase % (180000L / SCHEDULER_MAIN_LOOP_MS)))
   {
     counter30s++;
     display.fillRoundRect(0, 0, 128, 64, 10, GxEPD_BLACK);

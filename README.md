@@ -16,6 +16,8 @@ To enable token authentication for [PIO Remote](https://docs.platformio.org/en/l
 $ PLATFORMIO_AUTH_TOKEN=yourtokenhere code
 ```
 
+Please check out [the tutorial](TUTORIAL.md) for more detailled instructions.
+
 ## Hardware setup
 
 ### Parts
