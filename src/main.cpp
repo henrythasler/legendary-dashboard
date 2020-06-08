@@ -33,7 +33,7 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <Fonts/FreeMonoBold12pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeMonoBold24pt7b.h>
-#include <Fonts/FreeSans18pt7b.h>
+#include <Fonts/FreeSansBold18pt7b.h>
 
 // Statistics Helper-Class
 #include <statistics.h>
@@ -104,21 +104,17 @@ void setup()
   display.setTextColor(GxEPD_BLACK);
   display.setFont(&FreeMonoBold18pt7b);
   display.fillScreen(GxEPD_WHITE);
-  display.eraseDisplay(true);
+  // display.eraseDisplay(true);
   delay(100);
 
   initStage++; // Init complete
-  Serial.print("[ INIT ] - Completed at stage ");
-  Serial.println(initStage);
-  Serial.println();
-  digitalWrite(LED_BUILTIN, HIGH); // turn on LED;
+  Serial.printf("[ INIT ] - Completed at stage %u\n", initStage);
+  digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
 }
 
 // run forever
 void loop()
 {
-  counterBase++;
-
   // 100ms Tasks
   if (!(counterBase % (100 / SCHEDULER_MAIN_LOOP_MS)))
   {
@@ -148,21 +144,11 @@ void loop()
       humStats.update(currentHumidityPercent);
       pressStats.update(currentPressurePascal / 100.); // use hPa
 
-      Serial.print("Temperature = ");
-      Serial.print(currentTemperatureCelsius);
-      Serial.print(" °C");
-
-      Serial.print("    Humidity = ");
-      Serial.print(currentHumidityPercent);
-      Serial.print(" %");
-
-      Serial.print("    Pressure = ");
-      Serial.print(currentPressurePascal / 100.); // convert to hPa
-      Serial.print(" hPa");
-
-      Serial.print("    Altitude = ");
-      Serial.print(bme.readAltitude(SEALEVEL_PRESSURE + SEALEVEL_PRESSURE_CALIBRATION));
-      Serial.println(" m");
+      Serial.printf("Temperature = %.1f °C   Humidity = %.0f %%   Pressure = %.0f hPa   Altitude = %.0f m\n",
+                    currentTemperatureCelsius,
+                    currentHumidityPercent,
+                    currentPressurePascal / 100.,
+                    bme.readAltitude(SEALEVEL_PRESSURE + SEALEVEL_PRESSURE_CALIBRATION));
     }
     else
     {
@@ -171,19 +157,23 @@ void loop()
   }
 
   // 180s Tasks
+  // e-Paper Display MUST not be updated more often than every 180s to ensure long-term function
   if (!(counterBase % (180000L / SCHEDULER_MAIN_LOOP_MS)))
   {
     counter30s++;
-    display.fillRoundRect(0, 0, 128, 64, 10, GxEPD_BLACK);
-    display.fillRoundRect(2, 2, 124, 60, 8, GxEPD_RED);
-    display.setCursor(4, 40);
+    int offset = (counter30s % 5) * 40;
+    display.fillScreen(GxEPD_WHITE);
+    display.fillRoundRect(0, offset, 128, 64, 10, GxEPD_BLACK);
+    display.fillRoundRect(2, 2 + offset, 124, 60, 8, GxEPD_RED);
+    display.setCursor(4, 40 + offset);
     display.setFont(&FreeMonoBold18pt7b);
     display.printf("%.1f°C", currentTemperatureCelsius);
-    display.setFont(&FreeSans18pt7b);
-    display.setCursor(4, 100);
-    display.print("Hallo Huy!");
+    display.setFont(&FreeSansBold18pt7b);
+    display.setCursor(4, 100 + offset);
+    display.print("Hello World!");
     display.update();
   }
 
   delay(SCHEDULER_MAIN_LOOP_MS);
+  counterBase++;
 }
