@@ -1,6 +1,6 @@
 #include <statistics.h>
 
-Statistics::Statistics(uint16_t maxLength)
+Statistics::Statistics(uint32_t maxLength)
 {
   min = 1e12;
   max = -1e12;
@@ -11,7 +11,8 @@ void Statistics::update(float value)
 {
   min = value < min ? value : min;
   max = value > max ? value : max;
-  if(history.size() >= maxHistoryLength) {
+  if (history.size() >= maxHistoryLength)
+  {
     history.erase(history.begin());
   }
   history.push_back(value);
@@ -19,7 +20,7 @@ void Statistics::update(float value)
 
 float Statistics::mean()
 {
-  vector<int8_t>::const_iterator i;
+  vector<float>::const_iterator i;
   float mean = 0;
 
   if (history.size())
@@ -32,4 +33,9 @@ float Statistics::mean()
     mean = mean / history.size();
   }
   return mean;
+}
+
+uint32_t Statistics::size()
+{
+  return history.size();
 }

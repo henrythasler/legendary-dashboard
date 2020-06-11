@@ -34,12 +34,13 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeMonoBold24pt7b.h>
 #include <Fonts/FreeSansBold18pt7b.h>
+#include <Fonts/Picopixel.h>
 
 // Statistics Helper-Class
 #include <statistics.h>
-Statistics tempStats;
-Statistics humStats;
-Statistics pressStats;
+Statistics tempStats(268800U); // 1 week @ 30s sample rate
+Statistics humStats(268800U);
+Statistics pressStats(268800U);
 
 // Global Variables
 float currentTemperatureCelsius = 0;
@@ -64,13 +65,23 @@ void setup()
   // Setup serial connection for debugging
   Serial.begin(115200U);
   Serial.println();
-  Serial.println("[ INIT ] - Begin");
+  Serial.println("[  INIT  ] Begin");
+  initStage++;
+
+  Serial.printf("[  INIT  ] ChipRevision: 0x%02X    CpuFreq: %uMHz   FlashChipSize: %uKiB   HeapSize: %uKiB   MAC: %" PRIX64 "   SdkVersion: %s\n",
+                ESP.getChipRevision(),
+                ESP.getCpuFreqMHz(),
+                ESP.getFlashChipSize() / 1024,
+                ESP.getHeapSize() / 1024,
+                ESP.getEfuseMac(),
+                ESP.getSdkVersion());
   initStage++;
 
   // Initialize Environment Sensor
   pinMode(BME280_PIN_VCC, OUTPUT);
   digitalWrite(BME280_PIN_VCC, HIGH); // Power-Supply via GPIO (BME280 uses less than 1mA).
   delay(5);                           // wait for BMW280 to power up. Takes around 2ms.
+  initStage++;
 
   if (I2CBME.begin(BME280_PIN_I2C_SDA, BME280_PIN_I2C_SCL, 250000U)) // set I2C-Clock to 250kHz
   {
@@ -79,6 +90,7 @@ void setup()
     {
       initStage++;
       environmentSensorAvailable = true;
+      Serial.println("[  INIT  ] found BME280 environment sensor");
     }
   }
 
@@ -92,23 +104,24 @@ void setup()
                     Adafruit_BME280::SAMPLING_X16,    /* Pressure oversampling */
                     Adafruit_BME280::FILTER_X16,      /* Filtering. */
                     Adafruit_BME280::STANDBY_MS_500); /* Standby time. */
+    Serial.println("[  INIT  ] BME280 setup done");
   }
   else
   {
-    Serial.println("[ ERROR ] - Could not find a BME280 sensor, check wiring!");
+    Serial.println("[ ERROR  ] Could not find a BME280 sensor, check wiring!");
   }
   initStage++;
 
   delay(100);
-  display.init(115200);
+  Serial.println("[  INIT  ] setup ePaper display");
+  display.init(/*115200*/); // uncomment serial speed definition for debug output
   display.setTextColor(GxEPD_BLACK);
   display.setFont(&FreeMonoBold18pt7b);
   display.fillScreen(GxEPD_WHITE);
-  // display.eraseDisplay(true);
   delay(100);
 
   initStage++; // Init complete
-  Serial.printf("[ INIT ] - Completed at stage %u\n", initStage);
+  Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
 }
 
@@ -118,7 +131,7 @@ void loop()
   // 100ms Tasks
   if (!(counterBase % (100 / SCHEDULER_MAIN_LOOP_MS)))
   {
-    digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(LED_BUILTIN, HIGH); // regularly turn on LED
   }
 
   // 500ms Tasks
@@ -129,11 +142,15 @@ void loop()
   // 2s Tasks
   if (!(counterBase % (2000 / SCHEDULER_MAIN_LOOP_MS)))
   {
+    // indicate alive
+    digitalWrite(LED_BUILTIN, LOW);
+  }
+
+  // 30s Tasks
+  if (!(counterBase % (30000 / SCHEDULER_MAIN_LOOP_MS)))
+  {
     if (environmentSensorAvailable)
     {
-      // indicate measurement
-      digitalWrite(LED_BUILTIN, LOW);
-
       // read current measurements
       currentTemperatureCelsius = bme.readTemperature();
       currentHumidityPercent = bme.readHumidity();
@@ -144,7 +161,7 @@ void loop()
       humStats.update(currentHumidityPercent);
       pressStats.update(currentPressurePascal / 100.); // use hPa
 
-      Serial.printf("Temperature = %.1f °C   Humidity = %.0f %%   Pressure = %.0f hPa   Altitude = %.0f m\n",
+      Serial.printf("[ SENSOR ] Temperature = %.1f °C   Humidity = %.0f %%   Pressure = %.0f hPa   Altitude = %.0f m\n",
                     currentTemperatureCelsius,
                     currentHumidityPercent,
                     currentPressurePascal / 100.,
@@ -152,25 +169,35 @@ void loop()
     }
     else
     {
-      Serial.println("Environment sensor not available.");
+      Serial.println("[ SENSOR ] Environment sensor not available.");
     }
+
+    // memory state
+    Serial.printf("[ STATUS ] FreeHeap: %uKiB\n", ESP.getFreeHeap() / 1024);
   }
 
-  // 180s Tasks
-  // e-Paper Display MUST not be updated more often than every 180s to ensure long-term function
-  if (!(counterBase % (180000L / SCHEDULER_MAIN_LOOP_MS)))
+  // 300s Tasks
+  // e-Paper Display MUST not be updated more often than every 180s to ensure lifetime function
+  if (!(counterBase % (300000L / SCHEDULER_MAIN_LOOP_MS)))
   {
     counter30s++;
+
+    // Temperature Demo
     int offset = (counter30s % 5) * 40;
     display.fillScreen(GxEPD_WHITE);
-    display.fillRoundRect(0, offset, 128, 64, 10, GxEPD_BLACK);
-    display.fillRoundRect(2, 2 + offset, 124, 60, 8, GxEPD_RED);
-    display.setCursor(4, 40 + offset);
+    display.fillRoundRect(0 + offset, offset, 128, 64, 10, GxEPD_BLACK);
+    display.fillRoundRect(2 + offset, 2 + offset, 124, 60, 8, GxEPD_RED);
+    display.setCursor(4 + offset, 40 + offset);
     display.setFont(&FreeMonoBold18pt7b);
     display.printf("%.1f°C", currentTemperatureCelsius);
     display.setFont(&FreeSansBold18pt7b);
-    display.setCursor(4, 100 + offset);
+    display.setCursor(4 + offset, 100 + offset);
     display.print("Hello World!");
+
+    // Display stats
+    display.setFont(&Picopixel);
+    display.setCursor(0, 298);
+    display.printf("%u (%uKiB)", tempStats.size(), ESP.getFreeHeap() / 1024);
     display.update();
   }
 

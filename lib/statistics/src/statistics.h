@@ -14,12 +14,13 @@ class Statistics
 public:
   float min;
   float max;
-  int8_vec_t history;   // smaller type to save memory
+  float_vec_t history;
   uint16_t maxHistoryLength;
 
-  Statistics(uint16_t maxLength=32);
+  Statistics(uint32_t maxLength=32);
 
   void update(float value);
+  uint32_t size();
   float mean();
 };
 #endif
