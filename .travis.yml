@@ -40,6 +40,9 @@ script:
     - echo "Compile for default target"
     - platformio run
 
+    - echo "Static code analysis"
+    - platformio check --severity=medium --severity=high --fail-on-defect=high
+
     - echo "Run desktop (native) tests on Travis.CI Linux machine"
     - platformio test -e native
 
