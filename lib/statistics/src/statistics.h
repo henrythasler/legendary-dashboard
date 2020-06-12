@@ -4,6 +4,11 @@
 #include <stdint.h>
 #include <vector>
 #include <cmath>
+#include <stdexcept>
+
+#ifdef ARDUINO
+#include <Arduino.h>
+#endif
 
 using namespace std;
 
@@ -18,18 +23,18 @@ public:
   float max;
   // float_vec_t history;
   uint32_t maxHistoryLength;
-  uint32_t entries=0;
+  uint32_t entries = 0;
 
-	vector<Point> history;
+  vector<Point> history;
 
-  Statistics(uint32_t maxLength=32);
+  Statistics(uint32_t maxLength = 32);
 
   void update(float value);
   uint32_t size();
   float mean();
-  void compact();
+  bool compact(float epsilon = .2);
 
-  float PerpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd);
-  void RamerDouglasPeucker(const vector<Point> &pointList, float epsilon, vector<Point> &out);
+  float perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd);
+  void ramerDouglasPeucker(const vector<Point> &pointList, float epsilon, vector<Point> &out);
 };
 #endif

@@ -16,7 +16,7 @@ void Statistics::update(float value)
     history.erase(history.begin());
     entries--;
   }
-  history.push_back(Point(double(entries), double(value)));
+  history.push_back(Point(entries, value));
   entries++;
 }
 
@@ -42,7 +42,8 @@ uint32_t Statistics::size()
   return history.size();
 }
 
-float Statistics::PerpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd)
+// from: https://rosettacode.org/wiki/Ramer-Douglas-Peucker_line_simplification#C.2B.2B
+float Statistics::perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd)
 {
   float dx = lineEnd.first - lineStart.first;
   float dy = lineEnd.second - lineStart.second;
@@ -72,10 +73,10 @@ float Statistics::PerpendicularDistance(const Point &pt, const Point &lineStart,
   return pow(pow(ax, 2.0) + pow(ay, 2.0), 0.5);
 }
 
-void Statistics::RamerDouglasPeucker(const vector<Point> &pointList, float epsilon, vector<Point> &out)
+void Statistics::ramerDouglasPeucker(const vector<Point> &pointList, float epsilon, vector<Point> &out)
 {
   if (pointList.size() < 2)
-    return;
+    throw invalid_argument("Not enough points to simplify");
 
   // Find the point with the maximum distance from line between start and end
   float dmax = 0.0;
@@ -83,7 +84,7 @@ void Statistics::RamerDouglasPeucker(const vector<Point> &pointList, float epsil
   size_t end = pointList.size() - 1;
   for (size_t i = 1; i < end; i++)
   {
-    float d = PerpendicularDistance(pointList[i], pointList[0], pointList[end]);
+    float d = perpendicularDistance(pointList[i], pointList[0], pointList[end]);
     if (d > dmax)
     {
       index = i;
@@ -99,14 +100,14 @@ void Statistics::RamerDouglasPeucker(const vector<Point> &pointList, float epsil
     vector<Point> recResults2;
     vector<Point> firstLine(pointList.begin(), pointList.begin() + index + 1);
     vector<Point> lastLine(pointList.begin() + index, pointList.end());
-    RamerDouglasPeucker(firstLine, epsilon, recResults1);
-    RamerDouglasPeucker(lastLine, epsilon, recResults2);
+    ramerDouglasPeucker(firstLine, epsilon, recResults1);
+    ramerDouglasPeucker(lastLine, epsilon, recResults2);
 
     // Build the result list
     out.assign(recResults1.begin(), recResults1.end() - 1);
     out.insert(out.end(), recResults2.begin(), recResults2.end());
     if (out.size() < 2)
-      return;
+      throw runtime_error("Problem assembling output");
   }
   else
   {
@@ -117,9 +118,27 @@ void Statistics::RamerDouglasPeucker(const vector<Point> &pointList, float epsil
   }
 }
 
-void Statistics::compact()
+/**
+* This will apply the Ramer-Douglas-Peucker algorithm to the dataset stored in the history-vector.
+* @param epsilon Larger values will result in fewer data points
+*/
+bool Statistics::compact(float epsilon)
 {
- 	vector<Point> pointListOut;  
-  RamerDouglasPeucker(history, 1.0, pointListOut);
-
+  vector<Point> pointListOut;
+  try
+  {
+    ramerDouglasPeucker(history, epsilon, pointListOut);
+    history.assign(pointListOut.begin(), pointListOut.end());
+    history.shrink_to_fit();
+  }
+  catch (const std::exception &e)
+  {
+#ifdef ARDUINO
+    Serial.printf("Error in Statistics::compact(%f): %s\n", epsilon, e.what());
+#else
+    printf("Error in Statistics::compact(%f): %s\n", epsilon, e.what());
+#endif
+    return false;
+  }
+  return true;
 }
