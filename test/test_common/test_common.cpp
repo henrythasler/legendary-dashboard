@@ -53,19 +53,31 @@ void test_function_statistics_limiter(void)
 
 void test_function_statistics_huge(void)
 {
+    int maxEntries = 20000;
+#ifdef ARDUINO
+    maxEntries = 5000;
+#endif
+
     Statistics stats(10000);
-    for (int i = 0; i <= 9000; i++)
+    for (int i = 0; i < maxEntries; i++)
     {
         stats.update(i % 100);
-#ifdef ARDUINO
-        if (!(i % 100))
-            Serial.printf("%u Heap: %uKiB free\n", i, ESP.getFreeHeap() / 1024);
-#endif
+        // #ifdef ARDUINO
+        //         if (!(i % 100))
+        //             Serial.printf("%u: Object %u KiB of %u KiB   Heap: %u KiB (%uKiB free);  maxAlloc: %u KiB;   MinFreeHeap: %u KiB\n",
+        //             i,
+        //             (sizeof(stats.history) + sizeof(Point) * stats.history.capacity())/1024,
+        //             stats.history.max_size() / 1024,
+        //             ESP.getHeapSize()/1024,
+        //             ESP.getFreeHeap() / 1024,
+        //             ESP.getMaxAllocHeap()/1024,
+        //             ESP.getMinFreeHeap()/1024);
+        // #endif
     }
     TEST_ASSERT_EQUAL_FLOAT(0., stats.min);
     TEST_ASSERT_EQUAL_FLOAT(99., stats.max);
     TEST_ASSERT_EQUAL_FLOAT(49.5, stats.mean());
-    TEST_ASSERT_EQUAL_UINT32(10000, stats.size());
+    TEST_ASSERT_EQUAL_UINT32(min(maxEntries, 10000), stats.size());
 
 #ifndef ARDUINO
     char message[64];
@@ -178,11 +190,9 @@ void test_function_statistics_compact_math(void)
     int before = sizeof(stats.history) + sizeof(Point) * stats.history.capacity();
 #endif
     stats.compact(0.2);
-#ifndef ARDUINO
-    int after = sizeof(stats.history) + sizeof(Point) * stats.history.capacity();
-#endif
 
 #ifndef ARDUINO
+    int after = sizeof(stats.history) + sizeof(Point) * stats.history.capacity();
     char message[64];
     // for (vector<Point>::const_iterator i = stats.history.begin(); i != stats.history.end(); ++i)
     // {
@@ -199,26 +209,9 @@ void test_function_statistics_compact_math(void)
 void test_function_statistics_compact_throw1(void)
 {
     Statistics stats;
-
     stats.update(0);
-
-#ifndef ARDUINO
-    int before = sizeof(stats.history) + sizeof(Point) * stats.history.capacity();
-#endif
-
-    bool res = stats.compact(0.2);
+    bool res = stats.compact();
     TEST_ASSERT_FALSE(res);
-
-#ifndef ARDUINO
-    int after = sizeof(stats.history) + sizeof(Point) * stats.history.capacity();
-#endif
-
-#ifndef ARDUINO
-    char message[64];
-    snprintf(message, 64, "before=%u vs. after=%u", before, after);
-    TEST_MESSAGE(message);
-#endif
-
     TEST_ASSERT_EQUAL_INT16_MESSAGE(1, stats.history.size(), "stats.history.size()");
 }
 
@@ -247,16 +240,18 @@ void setup()
     // NOTE!!! Wait for >2 secs
     // if board doesn't support software reset via Serial.DTR/RTS
     delay(2000);
-
+    pinMode(LED_BUILTIN, OUTPUT);
+    Serial.begin(115200);
+    Serial.printf("Heap: %u KiB free\n", ESP.getFreeHeap() / 1024);
     process();
 }
 
 void loop()
 {
     digitalWrite(LED_BUILTIN, HIGH);
-    delay(100);
+    delay(250);
     digitalWrite(LED_BUILTIN, LOW);
-    delay(500);
+    delay(250);
 }
 
 #else

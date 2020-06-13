@@ -7,7 +7,7 @@ Statistics::Statistics(uint32_t maxLength)
   maxHistoryLength = maxLength;
 }
 
-void Statistics::update(float value)
+bool Statistics::update(float value)
 {
   min = value < min ? value : min;
   max = value > max ? value : max;
@@ -16,8 +16,22 @@ void Statistics::update(float value)
     history.erase(history.begin());
     entries--;
   }
-  history.push_back(Point(entries, value));
+  try
+  {
+    history.push_back(Point(entries, value));
+  }
+  catch (const exception &e)
+  {
+#ifdef ARDUINO
+    Serial.printf("Error in Statistics::update(): %s\n", e.what());
+#else
+    printf("Error in Statistics::update(): %s\n", e.what());
+#endif
+    return false;
+  }
+
   entries++;
+  return true;
 }
 
 float Statistics::mean()
