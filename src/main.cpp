@@ -53,7 +53,34 @@ uint32_t initStage = 0;
 // Flow control, basic task scheduler
 #define SCHEDULER_MAIN_LOOP_MS (10) // ms
 uint32_t counterBase = 0;
-uint32_t counter30s = 0;
+uint32_t counter300s = 0;
+bool enableDisplay = false;
+
+void doMeasurement(void)
+{
+  if (environmentSensorAvailable)
+  {
+    // read current measurements
+    currentTemperatureCelsius = bme.readTemperature();
+    currentHumidityPercent = bme.readHumidity();
+    currentPressurePascal = bme.readPressure() + PRESSURE_MEASUREMENT_CALIBRATION;
+
+    // update statistics for each measurement
+    tempStats.update(currentTemperatureCelsius);
+    humStats.update(currentHumidityPercent);
+    pressStats.update(currentPressurePascal / 100.); // use hPa
+
+    // Serial.printf("[ SENSOR ] Temperature = %.1f °C   Humidity = %.0f %%   Pressure = %.0f hPa   Altitude = %.0f m\n",
+    //               currentTemperatureCelsius,
+    //               currentHumidityPercent,
+    //               currentPressurePascal / 100.,
+    //               bme.readAltitude(SEALEVEL_PRESSURE + SEALEVEL_PRESSURE_CALIBRATION));
+  }
+  else
+  {
+    Serial.println("[ SENSOR ] Environment sensor not available.");
+  }
+}
 
 // run once on startup
 void setup()
@@ -137,6 +164,7 @@ void loop()
   // 500ms Tasks
   if (!(counterBase % (500 / SCHEDULER_MAIN_LOOP_MS)))
   {
+    doMeasurement();
   }
 
   // 2s Tasks
@@ -149,41 +177,27 @@ void loop()
   // 30s Tasks
   if (!(counterBase % (30000 / SCHEDULER_MAIN_LOOP_MS)))
   {
-    if (environmentSensorAvailable)
-    {
-      // read current measurements
-      currentTemperatureCelsius = bme.readTemperature();
-      currentHumidityPercent = bme.readHumidity();
-      currentPressurePascal = bme.readPressure() + PRESSURE_MEASUREMENT_CALIBRATION;
-
-      // update statistics for each measurement
-      tempStats.update(currentTemperatureCelsius);
-      humStats.update(currentHumidityPercent);
-      pressStats.update(currentPressurePascal / 100.); // use hPa
-
-      Serial.printf("[ SENSOR ] Temperature = %.1f °C   Humidity = %.0f %%   Pressure = %.0f hPa   Altitude = %.0f m\n",
-                    currentTemperatureCelsius,
-                    currentHumidityPercent,
-                    currentPressurePascal / 100.,
-                    bme.readAltitude(SEALEVEL_PRESSURE + SEALEVEL_PRESSURE_CALIBRATION));
-    }
-    else
-    {
-      Serial.println("[ SENSOR ] Environment sensor not available.");
-    }
-
+    // doMeasurement();
     // memory state
     Serial.printf("[ STATUS ] FreeHeap: %uKiB\n", ESP.getFreeHeap() / 1024);
+
+    int before = sizeof(tempStats.history) + sizeof(Point) * tempStats.history.capacity();
+    int beforeSize = tempStats.history.size();
+    tempStats.compact(0.2);
+    humStats.compact(0.2);
+    pressStats.compact(0.2);
+    int after = sizeof(tempStats.history) + sizeof(Point) * tempStats.history.capacity();
+    Serial.printf("[ SENSOR ] tempStats.compact(): before=%u (%u Bytes) => after=%u (%u Bytes)\n", beforeSize, before, tempStats.history.size(), after);
   }
 
   // 300s Tasks
   // e-Paper Display MUST not be updated more often than every 180s to ensure lifetime function
   if (!(counterBase % (300000L / SCHEDULER_MAIN_LOOP_MS)))
   {
-    counter30s++;
+    counter300s++;
 
     // Temperature Demo
-    int offset = (counter30s % 5) * 40;
+    int offset = (counter300s % 5) * 40;
     display.fillScreen(GxEPD_WHITE);
     display.fillRoundRect(0 + offset, offset, 128, 64, 10, GxEPD_BLACK);
     display.fillRoundRect(2 + offset, 2 + offset, 124, 60, 8, GxEPD_RED);
@@ -198,7 +212,8 @@ void loop()
     display.setFont(&Picopixel);
     display.setCursor(0, 298);
     display.printf("%u (%uKiB)", tempStats.size(), ESP.getFreeHeap() / 1024);
-    display.update();
+    if (enableDisplay)
+      display.update();
   }
 
   delay(SCHEDULER_MAIN_LOOP_MS);
