@@ -34,13 +34,14 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeMonoBold24pt7b.h>
 #include <Fonts/FreeSansBold18pt7b.h>
+#include <Fonts/FreeMono9pt7b.h>
 #include <Fonts/Picopixel.h>
 
 // Statistics Helper-Class
 #include <statistics.h>
-Statistics tempStats(268800U); // 1 week @ 30s sample rate
-Statistics humStats(268800U);
-Statistics pressStats(268800U);
+Statistics tempStats(5000U); // ~ 1 week @ 30s sample rate
+Statistics humStats(5000U);
+Statistics pressStats(5000U);
 
 // Global Variables
 float currentTemperatureCelsius = 0;
@@ -54,8 +55,12 @@ uint32_t initStage = 0;
 #define SCHEDULER_MAIN_LOOP_MS (10) // ms
 uint32_t counterBase = 0;
 uint32_t counter300s = 0;
-bool enableDisplay = false;
+bool enableDisplay = true;
 
+/**
+ * Sample measurements from environment sensor.
+ * 
+ ******************************************************/
 void doMeasurement(void)
 {
   if (environmentSensorAvailable)
@@ -82,7 +87,51 @@ void doMeasurement(void)
   }
 }
 
-// run once on startup
+/**
+ * Update the screen
+ * 
+ ******************************************************/
+void updateScreen()
+{
+  // Temperature Demo
+  int offset = (counter300s % 5) * 40;
+  display.fillScreen(GxEPD_WHITE);
+  display.fillRoundRect(0 + offset, offset, 128, 64, 10, GxEPD_BLACK);
+  display.fillRoundRect(2 + offset, 2 + offset, 124, 60, 8, GxEPD_RED);
+  display.drawLine(0,290, 399, 150, GxEPD_BLACK);
+  display.drawLine(0,291, 399, 151, GxEPD_BLACK);
+
+  display.setFont(&FreeMonoBold18pt7b);
+
+  display.setTextColor(GxEPD_BLACK);
+  display.setCursor(4 + offset, 40 + offset);
+  display.printf("%.1f°C", currentTemperatureCelsius);
+
+  display.setFont(&FreeSansBold18pt7b);
+
+  display.setTextColor(GxEPD_BLACK);
+  display.setCursor(4 + offset, 100 + offset);
+  display.print("Hello World!");
+
+  // Display stats
+  display.setFont(&Picopixel);
+  display.setCursor(0, 298);
+  display.printf("Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
+                 ESP.getFreeHeap() / 1024,
+                 ESP.getMaxAllocHeap() / 1024,
+                 tempStats.size(),
+                 sizeof(tempStats.history) + sizeof(Point) * tempStats.history.capacity(),
+                 humStats.size(),
+                 sizeof(humStats.history) + sizeof(Point) * humStats.history.capacity(),
+                 pressStats.size(),
+                 sizeof(pressStats.history) + sizeof(Point) * pressStats.history.capacity());
+  display.update();
+}
+
+/**
+ * This is run once on startup
+ * 
+ ******************************************************/
 void setup()
 {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -152,7 +201,10 @@ void setup()
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
 }
 
-// run forever
+/**
+ * This runs forever
+ * 
+ ******************************************************/
 void loop()
 {
   // 100ms Tasks
@@ -164,7 +216,6 @@ void loop()
   // 500ms Tasks
   if (!(counterBase % (500 / SCHEDULER_MAIN_LOOP_MS)))
   {
-    doMeasurement();
   }
 
   // 2s Tasks
@@ -177,17 +228,9 @@ void loop()
   // 30s Tasks
   if (!(counterBase % (30000 / SCHEDULER_MAIN_LOOP_MS)))
   {
-    // doMeasurement();
+    doMeasurement();
     // memory state
     Serial.printf("[ STATUS ] FreeHeap: %uKiB\n", ESP.getFreeHeap() / 1024);
-
-    int before = sizeof(tempStats.history) + sizeof(Point) * tempStats.history.capacity();
-    int beforeSize = tempStats.history.size();
-    tempStats.compact(0.2);
-    humStats.compact(0.2);
-    pressStats.compact(0.2);
-    int after = sizeof(tempStats.history) + sizeof(Point) * tempStats.history.capacity();
-    Serial.printf("[ SENSOR ] tempStats.compact(): before=%u (%u Bytes) => after=%u (%u Bytes)\n", beforeSize, before, tempStats.history.size(), after);
   }
 
   // 300s Tasks
@@ -195,25 +238,16 @@ void loop()
   if (!(counterBase % (300000L / SCHEDULER_MAIN_LOOP_MS)))
   {
     counter300s++;
-
-    // Temperature Demo
-    int offset = (counter300s % 5) * 40;
-    display.fillScreen(GxEPD_WHITE);
-    display.fillRoundRect(0 + offset, offset, 128, 64, 10, GxEPD_BLACK);
-    display.fillRoundRect(2 + offset, 2 + offset, 124, 60, 8, GxEPD_RED);
-    display.setCursor(4 + offset, 40 + offset);
-    display.setFont(&FreeMonoBold18pt7b);
-    display.printf("%.1f°C", currentTemperatureCelsius);
-    display.setFont(&FreeSansBold18pt7b);
-    display.setCursor(4 + offset, 100 + offset);
-    display.print("Hello World!");
-
-    // Display stats
-    display.setFont(&Picopixel);
-    display.setCursor(0, 298);
-    display.printf("%u (%uKiB)", tempStats.size(), ESP.getFreeHeap() / 1024);
     if (enableDisplay)
-      display.update();
+      updateScreen();
+  }
+
+  // 1h Tasks
+  if (!(counterBase % (3600000L / SCHEDULER_MAIN_LOOP_MS)))
+  {
+    tempStats.compact(0.2);
+    humStats.compact(0.2);
+    pressStats.compact(0.2);
   }
 
   delay(SCHEDULER_MAIN_LOOP_MS);
