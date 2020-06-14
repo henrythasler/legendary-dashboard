@@ -21,7 +21,7 @@ bool Statistics::update(float value)
   catch (const exception &e)
   {
 #ifdef ARDUINO
-    Serial.printf("Error in Statistics::update(): %s\n", e.what());
+    Serial.printf("[ ERROR ] Statistics::update(): %s\n", e.what());
 #else
     printf("Error in Statistics::update(): %s\n", e.what());
 #endif
@@ -145,7 +145,7 @@ bool Statistics::compact(float epsilon)
   catch (const std::exception &e)
   {
 #ifdef ARDUINO
-    Serial.printf("Error in Statistics::compact(%f): %s\n", epsilon, e.what());
+    Serial.printf("[ ERROR ] Statistics::compact(%f): %s\n", epsilon, e.what());
 #else
     printf("Error in Statistics::compact(%f): %s\n", epsilon, e.what());
 #endif

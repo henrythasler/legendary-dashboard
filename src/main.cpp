@@ -29,10 +29,7 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #define HAS_RED_COLOR
 
 // FreeFonts from Adafruit_GFX
-#include <Fonts/FreeMonoBold9pt7b.h>
-#include <Fonts/FreeMonoBold12pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
-#include <Fonts/FreeMonoBold24pt7b.h>
 #include <Fonts/FreeSansBold18pt7b.h>
 #include <Fonts/Org_01.h>
 
@@ -54,6 +51,7 @@ uint32_t initStage = 0;
 #define SCHEDULER_MAIN_LOOP_MS (10) // ms
 uint32_t counterBase = 0;
 uint32_t counter300s = 0;
+uint32_t counter1h = 0;
 bool enableDisplay = true;
 
 /**
@@ -73,16 +71,10 @@ void doMeasurement(void)
     tempStats.update(currentTemperatureCelsius);
     humStats.update(currentHumidityPercent);
     pressStats.update(currentPressurePascal / 100.); // use hPa
-
-    // Serial.printf("[ SENSOR ] Temperature = %.1f °C   Humidity = %.0f %%   Pressure = %.0f hPa   Altitude = %.0f m\n",
-    //               currentTemperatureCelsius,
-    //               currentHumidityPercent,
-    //               currentPressurePascal / 100.,
-    //               bme.readAltitude(SEALEVEL_PRESSURE + SEALEVEL_PRESSURE_CALIBRATION));
   }
   else
   {
-    Serial.println("[ SENSOR ] Environment sensor not available.");
+    Serial.println("[  WARN  ] Environment sensor not available.");
   }
 }
 
@@ -97,8 +89,8 @@ void updateScreen()
   display.fillScreen(GxEPD_WHITE);
   display.fillRoundRect(0 + offset, offset, 128, 64, 10, GxEPD_BLACK);
   display.fillRoundRect(2 + offset, 2 + offset, 124, 60, 8, GxEPD_RED);
-  display.drawLine(0,290, 399, 150, GxEPD_BLACK);
-  display.drawLine(0,291, 399, 151, GxEPD_BLACK);
+  display.drawLine(0, 290, 399, 150, GxEPD_BLACK);
+  display.drawLine(0, 291, 399, 151, GxEPD_BLACK);
 
   display.setFont(&FreeMonoBold18pt7b);
 
@@ -148,7 +140,7 @@ void setup()
                 ESP.getCpuFreqMHz(),
                 ESP.getFlashChipSize() / 1024,
                 ESP.getHeapSize() / 1024,
-                ESP.getEfuseMac(),
+                ESP.getEfuseMac(),  // FIXME: 2888DEAE114C must be converted to 4c:11:ae:de:88:28
                 ESP.getSdkVersion());
   initStage++;
 
@@ -187,8 +179,9 @@ void setup()
   }
   initStage++;
 
-  delay(100);
   Serial.println("[  INIT  ] setup ePaper display");
+  delay(100); // wait a bit, before display-class starts writing to serial out
+
   display.init(/*115200*/); // uncomment serial speed definition for debug output
   display.setTextColor(GxEPD_BLACK);
   display.setFont(&FreeMonoBold18pt7b);
@@ -207,46 +200,62 @@ void setup()
 void loop()
 {
   // 100ms Tasks
-  if (!(counterBase % (100 / SCHEDULER_MAIN_LOOP_MS)))
+  if (!(counterBase % (100L / SCHEDULER_MAIN_LOOP_MS)))
   {
     digitalWrite(LED_BUILTIN, HIGH); // regularly turn on LED
   }
 
   // 500ms Tasks
-  if (!(counterBase % (500 / SCHEDULER_MAIN_LOOP_MS)))
+  if (!(counterBase % (500L / SCHEDULER_MAIN_LOOP_MS)))
   {
   }
 
   // 2s Tasks
-  if (!(counterBase % (2000 / SCHEDULER_MAIN_LOOP_MS)))
+  if (!(counterBase % (2000L / SCHEDULER_MAIN_LOOP_MS)))
   {
     // indicate alive
     digitalWrite(LED_BUILTIN, LOW);
   }
 
   // 30s Tasks
-  if (!(counterBase % (30000 / SCHEDULER_MAIN_LOOP_MS)))
+  if (!(counterBase % (30000L / SCHEDULER_MAIN_LOOP_MS)))
   {
     doMeasurement();
     // memory state
-    Serial.printf("[ STATUS ] FreeHeap: %uKiB\n", ESP.getFreeHeap() / 1024);
+    Serial.printf("[ MEMORY ] Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)\n",
+                  ESP.getFreeHeap() / 1024,
+                  ESP.getMaxAllocHeap() / 1024,
+                  tempStats.size(),
+                  sizeof(tempStats.history) + sizeof(Point) * tempStats.history.capacity(),
+                  humStats.size(),
+                  sizeof(humStats.history) + sizeof(Point) * humStats.history.capacity(),
+                  pressStats.size(),
+                  sizeof(pressStats.history) + sizeof(Point) * pressStats.history.capacity());
   }
 
   // 300s Tasks
   // e-Paper Display MUST not be updated more often than every 180s to ensure lifetime function
   if (!(counterBase % (300000L / SCHEDULER_MAIN_LOOP_MS)))
   {
-    counter300s++;
     if (enableDisplay)
+    {
+      Serial.println("[  DISP  ] Updating...");
       updateScreen();
+    }
+
+    counter300s++;
   }
 
   // 1h Tasks
   if (!(counterBase % (3600000L / SCHEDULER_MAIN_LOOP_MS)))
   {
-    tempStats.compact(0.2);
-    humStats.compact(0.2);
-    pressStats.compact(0.2);
+    if (counter1h > 0) // don't compact on startup
+    {
+      tempStats.compact(0.2);
+      humStats.compact(0.2);
+      pressStats.compact(0.2);
+    }
+    counter1h++;
   }
 
   delay(SCHEDULER_MAIN_LOOP_MS);
