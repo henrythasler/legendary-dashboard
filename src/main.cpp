@@ -34,8 +34,7 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeMonoBold24pt7b.h>
 #include <Fonts/FreeSansBold18pt7b.h>
-#include <Fonts/FreeMono9pt7b.h>
-#include <Fonts/Picopixel.h>
+#include <Fonts/Org_01.h>
 
 // Statistics Helper-Class
 #include <statistics.h>
@@ -114,7 +113,7 @@ void updateScreen()
   display.print("Hello World!");
 
   // Display stats
-  display.setFont(&Picopixel);
+  display.setFont(&Org_01);
   display.setCursor(0, 298);
   display.printf("Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
                  ESP.getFreeHeap() / 1024,
