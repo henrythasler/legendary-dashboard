@@ -97,3 +97,7 @@ $ platformio remote agent start 2>&1 >/dev/null &
 ### Raspberry Pi
 
 - [Video Streaming with Raspberry Pi Camera](https://randomnerdtutorials.com/video-streaming-with-raspberry-pi-camera/)
+
+### C++, Coding
+
+- [Ramer-Douglas-Peucker line simplification](https://rosettacode.org/wiki/Ramer-Douglas-Peucker_line_simplification#C.2B.2B)
