@@ -1,5 +1,41 @@
 # legendary-dashboard - Developer Notes
 
+## PlatformIO Remote as systemd-service
+
+create `/etc/systemd/system/pioagent.service` as follows:
+
+```
+[Unit]
+Description=PlatformIO
+After=network.target
+
+[Service]
+User=henry
+Type=simple
+WorkingDirectory=/home/henry
+Environment="PLATFORMIO_AUTH_TOKEN=yourtokenhere"
+ExecStart=/home/henry/.platformio/penv/bin/pio remote agent start
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+
+```
+
+Make sure to use the correct token. Change the username and path if required!
+
+Start with:
+
+```
+$ sudo systemctl daemon-reload
+$ sudo systemctl restart pioagent.service 
+```
+
+Enable on boot: 
+```
+$ sudo systemctl enable pioagent.service
+```
+
 ## BME280 Environment Sensor
 
 Things to keep in mind:
