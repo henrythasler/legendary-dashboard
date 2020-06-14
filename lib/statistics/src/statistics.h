@@ -14,16 +14,16 @@ using namespace std;
 
 typedef std::vector<float> float_vec_t;
 typedef std::vector<int8_t> int8_vec_t;
-typedef std::pair<float, float> Point;
+typedef std::pair<uint32_t, float> Point;
+typedef vector<Point>::const_iterator PointIterator;
 
 class Statistics
 {
 public:
   float min;
   float max;
-  // float_vec_t history;
   uint32_t maxHistoryLength;
-  uint32_t entries = 0;
+  uint32_t id = 0;
 
   vector<Point> history;
 

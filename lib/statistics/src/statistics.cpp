@@ -11,14 +11,12 @@ bool Statistics::update(float value)
 {
   min = value < min ? value : min;
   max = value > max ? value : max;
-  if (history.size() >= maxHistoryLength)
-  {
-    history.erase(history.begin());
-    entries--;
-  }
+
   try
   {
-    history.push_back(Point(entries, value));
+    if (history.size() >= maxHistoryLength)
+      history.erase(history.begin());
+    history.push_back(Point(id, value));
   }
   catch (const exception &e)
   {
@@ -30,19 +28,18 @@ bool Statistics::update(float value)
     return false;
   }
 
-  entries++;
+  id++;
   return true;
 }
 
 float Statistics::mean()
 {
-  vector<Point>::const_iterator i;
   float mean = 0;
 
   if (history.size())
   {
     mean = history[0].second;
-    for (i = history.begin() + 1; i != history.end(); ++i)
+    for (PointIterator i = history.begin() + 1; i != history.end(); ++i)
     {
       mean += float(Point(*i).second);
     }
@@ -59,7 +56,7 @@ uint32_t Statistics::size()
 // from: https://rosettacode.org/wiki/Ramer-Douglas-Peucker_line_simplification#C.2B.2B
 float Statistics::perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd)
 {
-  float dx = lineEnd.first - lineStart.first;
+  float dx = float(lineEnd.first) - float(lineStart.first);
   float dy = lineEnd.second - lineStart.second;
 
   //Normalise
@@ -70,7 +67,7 @@ float Statistics::perpendicularDistance(const Point &pt, const Point &lineStart,
     dy /= mag;
   }
 
-  float pvx = pt.first - lineStart.first;
+  float pvx = float(pt.first) - float(lineStart.first);
   float pvy = pt.second - lineStart.second;
 
   //Get dot product (project pv onto normalized direction)
