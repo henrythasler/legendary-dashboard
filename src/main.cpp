@@ -33,6 +33,10 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <Fonts/FreeSansBold18pt7b.h>
 #include <Fonts/Org_01.h>
 
+// Bitmap image files
+#include "brucelee_img.h"
+#include "background_img.h"
+
 // Statistics Helper-Class
 #include <statistics.h>
 Statistics tempStats(5000U); // ~ 1 week @ 30s sample rate
@@ -84,9 +88,15 @@ void doMeasurement(void)
  ******************************************************/
 void updateScreen()
 {
+  // clear screen
+  display.fillScreen(GxEPD_WHITE);
+
+  // display background image
+  //display.drawBitmap(brucelee_img, 0, 0, BRUCELEE_WIDTH, BRUCELEE_HEIGHT, GxEPD_BLACK);
+  display.drawBitmap(background_img, 0, 0, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, GxEPD_BLACK);
+
   // Temperature Demo
   int offset = (counter300s % 5) * 40;
-  display.fillScreen(GxEPD_WHITE);
   display.fillRoundRect(0 + offset, offset, 128, 64, 10, GxEPD_BLACK);
   display.fillRoundRect(2 + offset, 2 + offset, 124, 60, 8, GxEPD_RED);
   display.drawLine(0, 290, 399, 150, GxEPD_BLACK);
