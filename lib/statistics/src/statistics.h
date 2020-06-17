@@ -29,7 +29,7 @@ public:
 
   Statistics(uint32_t maxLength = 32);
 
-  bool update(float value);
+  bool update(uint32_t timestamp, float value);
   uint32_t size();
   float mean();
   bool compact(float epsilon = .2);

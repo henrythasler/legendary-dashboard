@@ -39,6 +39,10 @@ Statistics tempStats(5000U); // ~ 1 week @ 30s sample rate
 Statistics humStats(5000U);
 Statistics pressStats(5000U);
 
+// uptime calculation
+#include <uptime.h>
+Uptime uptime;
+
 // Global Variables
 float currentTemperatureCelsius = 0;
 float currentHumidityPercent = 0;
@@ -52,7 +56,7 @@ uint32_t initStage = 0;
 uint32_t counterBase = 0;
 uint32_t counter300s = 0;
 uint32_t counter1h = 0;
-bool enableDisplay = true;
+bool enableDisplay = true;  // display output can be disabled for testing purposes with this flag
 
 /**
  * Sample measurements from environment sensor.
@@ -68,9 +72,10 @@ void doMeasurement(void)
     currentPressurePascal = bme.readPressure() + PRESSURE_MEASUREMENT_CALIBRATION;
 
     // update statistics for each measurement
-    tempStats.update(currentTemperatureCelsius);
-    humStats.update(currentHumidityPercent);
-    pressStats.update(currentPressurePascal / 100.); // use hPa
+    uint32_t timestamp = uptime.getSeconds();
+    tempStats.update(timestamp, currentTemperatureCelsius);
+    humStats.update(timestamp, currentHumidityPercent);
+    pressStats.update(timestamp, currentPressurePascal / 100.); // use hPa
   }
   else
   {
@@ -107,7 +112,7 @@ void updateScreen()
   // Display stats
   display.setFont(&Org_01);
   display.setCursor(0, 298);
-  display.printf("Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
+  display.printf("Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B) up: %us",
                  ESP.getFreeHeap() / 1024,
                  ESP.getMaxAllocHeap() / 1024,
                  tempStats.size(),
@@ -115,7 +120,8 @@ void updateScreen()
                  humStats.size(),
                  sizeof(humStats.history) + sizeof(Point) * humStats.history.capacity(),
                  pressStats.size(),
-                 sizeof(pressStats.history) + sizeof(Point) * pressStats.history.capacity());
+                 sizeof(pressStats.history) + sizeof(Point) * pressStats.history.capacity(),
+                 uptime.getSeconds());
   display.update();
 }
 
@@ -140,7 +146,7 @@ void setup()
                 ESP.getCpuFreqMHz(),
                 ESP.getFlashChipSize() / 1024,
                 ESP.getHeapSize() / 1024,
-                ESP.getEfuseMac(),  // FIXME: 2888DEAE114C must be converted to 4c:11:ae:de:88:28
+                ESP.getEfuseMac(), // FIXME: 2888DEAE114C must be converted to 4c:11:ae:de:88:28
                 ESP.getSdkVersion());
   initStage++;
 
@@ -222,7 +228,7 @@ void loop()
   {
     doMeasurement();
     // memory state
-    Serial.printf("[ MEMORY ] Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)\n",
+    Serial.printf("[ MEMORY ] Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B) Uptime: %u s\n",
                   ESP.getFreeHeap() / 1024,
                   ESP.getMaxAllocHeap() / 1024,
                   tempStats.size(),
@@ -230,7 +236,8 @@ void loop()
                   humStats.size(),
                   sizeof(humStats.history) + sizeof(Point) * humStats.history.capacity(),
                   pressStats.size(),
-                  sizeof(pressStats.history) + sizeof(Point) * pressStats.history.capacity());
+                  sizeof(pressStats.history) + sizeof(Point) * pressStats.history.capacity(),
+                  uptime.getSeconds());
   }
 
   // 300s Tasks

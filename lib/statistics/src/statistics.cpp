@@ -7,7 +7,7 @@ Statistics::Statistics(uint32_t maxLength)
   maxHistoryLength = maxLength;
 }
 
-bool Statistics::update(float value)
+bool Statistics::update(uint32_t timestamp, float value)
 {
   min = value < min ? value : min;
   max = value > max ? value : max;
@@ -16,7 +16,7 @@ bool Statistics::update(float value)
   {
     if (history.size() >= maxHistoryLength)
       history.erase(history.begin());
-    history.push_back(Point(id, value));
+    history.push_back(Point(timestamp, value));
   }
   catch (const exception &e)
   {

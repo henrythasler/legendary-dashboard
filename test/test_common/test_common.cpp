@@ -17,7 +17,7 @@ void test_function_statistics_initial(void)
 void test_function_statistics_single(void)
 {
   Statistics stats(8);
-  stats.update(2);
+  stats.update(0, 2);
   TEST_ASSERT_EQUAL_FLOAT(2., stats.min);
   TEST_ASSERT_EQUAL_FLOAT(2., stats.max);
   TEST_ASSERT_EQUAL_FLOAT(2., stats.mean());
@@ -27,8 +27,8 @@ void test_function_statistics_single(void)
 void test_function_statistics_simple(void)
 {
   Statistics stats(8);
-  stats.update(0);
-  stats.update(1);
+  stats.update(0, 0);
+  stats.update(1, 1);
   TEST_ASSERT_EQUAL_FLOAT(0., stats.min);
   TEST_ASSERT_EQUAL_FLOAT(1., stats.max);
   TEST_ASSERT_EQUAL_FLOAT(.5, stats.mean());
@@ -38,12 +38,12 @@ void test_function_statistics_simple(void)
 void test_function_statistics_limiter(void)
 {
   Statistics stats(4);
-  stats.update(0);
-  stats.update(1);
-  stats.update(2);
-  stats.update(3);
-  stats.update(4);
-  stats.update(5);
+  stats.update(0, 0);
+  stats.update(1, 1);
+  stats.update(2, 2);
+  stats.update(3, 3);
+  stats.update(4, 4);
+  stats.update(5, 5);
 
   TEST_ASSERT_EQUAL_FLOAT(0., stats.min);
   TEST_ASSERT_EQUAL_FLOAT(5., stats.max);
@@ -66,7 +66,7 @@ void test_function_statistics_huge(void)
   Statistics stats(maxEntries);
   for (int i = 0; i < 50000; i++)
   {
-    stats.update(i % 100);
+    stats.update(i, i % 100);
     // #ifdef ARDUINO
     //         if (!(i % 100))
     //             Serial.printf("%u: Object %u KiB of %u KiB   Heap: %u KiB (%uKiB free);  maxAlloc: %u KiB;   MinFreeHeap: %u KiB\n",
@@ -188,7 +188,7 @@ void test_function_statistics_compact_math(void)
 
   for (int x = 0; x <= 80; x++)
   {
-    stats.update(cos((float(x) / 20.) * (float(x) / 20.) - 1) * 20);
+    stats.update(x, cos((float(x) / 20.) * (float(x) / 20.) - 1) * 20);
   }
 
 #ifndef ARDUINO
@@ -214,7 +214,7 @@ void test_function_statistics_compact_math(void)
 void test_function_statistics_compact_throw(void)
 {
   Statistics stats;
-  stats.update(0);
+  stats.update(0, 0);
   bool res = stats.compact();
   TEST_ASSERT_FALSE(res);
   TEST_ASSERT_EQUAL_INT16_MESSAGE(1, stats.history.size(), "stats.history.size()");
@@ -227,7 +227,7 @@ void test_function_statistics_compact_huge(void)
     Statistics stats(5000);
     for (uint32_t x = 1; x <= 100000; x++)
     {
-      stats.update(1);
+      stats.update(x-1, 1);
       if (!(x % 100))
         stats.compact();
     }
