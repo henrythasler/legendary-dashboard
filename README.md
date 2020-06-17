@@ -74,6 +74,7 @@ $ platformio remote agent start 2>&1 >/dev/null &
 ### ESP32
 
  - [ESP32 Pinout Reference](https://randomnerdtutorials.com/esp32-pinout-reference-gpios/)
+ - [ESP-IDF Programming Guide](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/index.html)
 
 ### SIM800L T-Call V1.3 ESP32
 
