@@ -1,22 +1,22 @@
 #include <statistics.h>
 
-Statistics::Statistics(uint32_t maxLength)
+Timeseries::Timeseries(uint32_t maxLength)
 {
   min = 1e12;
   max = -1e12;
   maxHistoryLength = maxLength;
 }
 
-bool Statistics::update(uint32_t timestamp, float value)
+bool Timeseries::update(uint32_t timestamp, float value)
 {
   min = value < min ? value : min;
   max = value > max ? value : max;
 
   try
   {
-    if (history.size() >= maxHistoryLength)
-      history.erase(history.begin());
-    history.push_back(Point(timestamp, value));
+    if (data.size() >= maxHistoryLength)
+      data.erase(data.begin());
+    data.push_back(Point(timestamp, value));
   }
   catch (const exception &e)
   {
@@ -32,29 +32,29 @@ bool Statistics::update(uint32_t timestamp, float value)
   return true;
 }
 
-float Statistics::mean()
+float Timeseries::mean()
 {
   float mean = 0;
 
-  if (history.size())
+  if (data.size())
   {
-    mean = history[0].second;
-    for (PointIterator i = history.begin() + 1; i != history.end(); ++i)
+    mean = data[0].second;
+    for (PointIterator i = data.begin() + 1; i != data.end(); ++i)
     {
       mean += float(Point(*i).second);
     }
-    mean = mean / history.size();
+    mean = mean / data.size();
   }
   return mean;
 }
 
-uint32_t Statistics::size()
+uint32_t Timeseries::size()
 {
-  return history.size();
+  return data.size();
 }
 
 // from: https://rosettacode.org/wiki/Ramer-Douglas-Peucker_line_simplification#C.2B.2B
-float Statistics::perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd)
+float Timeseries::perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd)
 {
   float dx = float(lineEnd.first) - float(lineStart.first);
   float dy = lineEnd.second - lineStart.second;
@@ -84,7 +84,7 @@ float Statistics::perpendicularDistance(const Point &pt, const Point &lineStart,
   return pow(pow(ax, 2.0) + pow(ay, 2.0), 0.5);
 }
 
-void Statistics::ramerDouglasPeucker(const vector<Point> &pointList, float epsilon, vector<Point> &out)
+void Timeseries::ramerDouglasPeucker(const vector<Point> &pointList, float epsilon, vector<Point> &out)
 {
   if (pointList.size() < 2)
     throw invalid_argument("Not enough points to simplify");
@@ -130,17 +130,17 @@ void Statistics::ramerDouglasPeucker(const vector<Point> &pointList, float epsil
 }
 
 /**
-* This will apply the Ramer-Douglas-Peucker algorithm to the dataset stored in the history-vector.
+* This will apply the Ramer-Douglas-Peucker algorithm to the dataset stored in the data-vector.
 * @param epsilon Larger values will result in fewer data points
 */
-bool Statistics::compact(float epsilon)
+bool Timeseries::compact(float epsilon)
 {
   vector<Point> pointListOut;
   try
   {
-    ramerDouglasPeucker(history, epsilon, pointListOut);
-    history.assign(pointListOut.begin(), pointListOut.end());
-    history.shrink_to_fit();
+    ramerDouglasPeucker(data, epsilon, pointListOut);
+    data.assign(pointListOut.begin(), pointListOut.end());
+    data.shrink_to_fit();
   }
   catch (const std::exception &e)
   {

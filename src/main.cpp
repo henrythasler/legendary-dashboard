@@ -35,13 +35,17 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 
 // Statistics Helper-Class
 #include <statistics.h>
-Statistics tempStats(5000U); // ~ 1 week @ 30s sample rate
-Statistics humStats(5000U);
-Statistics pressStats(5000U);
+Timeseries tempStats(5000U); // ~ 1 week @ 30s sample rate
+Timeseries humStats(5000U);
+Timeseries pressStats(5000U);
 
 // uptime calculation
 #include <uptime.h>
 Uptime uptime;
+
+// charts
+#include <chart.h>
+Chart chart;
 
 // Global Variables
 float currentTemperatureCelsius = 0;
@@ -56,7 +60,7 @@ uint32_t initStage = 0;
 uint32_t counterBase = 0;
 uint32_t counter300s = 0;
 uint32_t counter1h = 0;
-bool enableDisplay = true;  // display output can be disabled for testing purposes with this flag
+bool enableDisplay = true; // display output can be disabled for testing purposes with this flag
 
 /**
  * Sample measurements from environment sensor.
@@ -92,36 +96,44 @@ void updateScreen()
   // Temperature Demo
   int offset = (counter300s % 5) * 40;
   display.fillScreen(GxEPD_WHITE);
-  display.fillRoundRect(0 + offset, offset, 128, 64, 10, GxEPD_BLACK);
-  display.fillRoundRect(2 + offset, 2 + offset, 124, 60, 8, GxEPD_RED);
-  display.drawLine(0, 290, 399, 150, GxEPD_BLACK);
-  display.drawLine(0, 291, 399, 151, GxEPD_BLACK);
+  // display.fillRoundRect(0 + offset, offset, 128, 64, 10, GxEPD_BLACK);
+  // display.fillRoundRect(2 + offset, 2 + offset, 124, 60, 8, GxEPD_RED);
+  // display.drawLine(0, 280, 399, 150, GxEPD_BLACK);
+  // display.drawLine(0, 281, 399, 151, GxEPD_BLACK);
+
+  Timeseries fake(40);
+  for (int x = 0; x <= 80; x++)
+  {
+    fake.update(x, cos((float(x) / 20.) * (float(x) / 20.) - 1) * 20);
+    // display.drawPixel(x, 150 - cos((float(x) / 20.) * (float(x) / 20.) - 1) * 20, GxEPD_BLACK);
+  }
+  chart.lineChart(&display, &fake, 400, 300);
 
   display.setFont(&FreeMonoBold18pt7b);
 
   display.setTextColor(GxEPD_BLACK);
   display.setCursor(4 + offset, 40 + offset);
-  display.printf("%.1f°C", currentTemperatureCelsius);
+  // display.printf("%.1f°C", currentTemperatureCelsius);
 
   display.setFont(&FreeSansBold18pt7b);
 
   display.setTextColor(GxEPD_BLACK);
   display.setCursor(4 + offset, 100 + offset);
-  display.print("Hello World!");
+  // display.print("Hello World!");
 
   // Display stats
   display.setFont(&Org_01);
-  display.setCursor(0, 298);
-  display.printf("Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B) up: %us",
+  display.setCursor(0, 290);
+  display.printf("up: %us\nFree: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
+                 uptime.getSeconds(),
                  ESP.getFreeHeap() / 1024,
                  ESP.getMaxAllocHeap() / 1024,
                  tempStats.size(),
-                 sizeof(tempStats.history) + sizeof(Point) * tempStats.history.capacity(),
+                 sizeof(tempStats.data) + sizeof(Point) * tempStats.data.capacity(),
                  humStats.size(),
-                 sizeof(humStats.history) + sizeof(Point) * humStats.history.capacity(),
+                 sizeof(humStats.data) + sizeof(Point) * humStats.data.capacity(),
                  pressStats.size(),
-                 sizeof(pressStats.history) + sizeof(Point) * pressStats.history.capacity(),
-                 uptime.getSeconds());
+                 sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity());
   display.update();
 }
 
@@ -232,11 +244,11 @@ void loop()
                   ESP.getFreeHeap() / 1024,
                   ESP.getMaxAllocHeap() / 1024,
                   tempStats.size(),
-                  sizeof(tempStats.history) + sizeof(Point) * tempStats.history.capacity(),
+                  sizeof(tempStats.data) + sizeof(Point) * tempStats.data.capacity(),
                   humStats.size(),
-                  sizeof(humStats.history) + sizeof(Point) * humStats.history.capacity(),
+                  sizeof(humStats.data) + sizeof(Point) * humStats.data.capacity(),
                   pressStats.size(),
-                  sizeof(pressStats.history) + sizeof(Point) * pressStats.history.capacity(),
+                  sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity(),
                   uptime.getSeconds());
   }
 
