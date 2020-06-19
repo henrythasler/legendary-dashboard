@@ -2,6 +2,10 @@
 
 #define LED_BUILTIN (13) // LED is connected to IO13
 
+#define MODEM_RST (5)
+#define MODEM_PWKEY (4)
+#define MODEM_POWER_ON (23)
+
 // Environment sensor includes and defines
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
@@ -56,7 +60,7 @@ uint32_t initStage = 0;
 uint32_t counterBase = 0;
 uint32_t counter300s = 0;
 uint32_t counter1h = 0;
-bool enableDisplay = true;  // display output can be disabled for testing purposes with this flag
+bool enableDisplay = true; // display output can be disabled for testing purposes with this flag
 
 /**
  * Sample measurements from environment sensor.
@@ -193,6 +197,17 @@ void setup()
   display.setFont(&FreeMonoBold18pt7b);
   display.fillScreen(GxEPD_WHITE);
   delay(100);
+  initStage++;
+
+  // Initialize SIM800L Module
+  // Set-up modem reset, enable, power pins
+  Serial.println("[  INIT  ] modem power on");
+  pinMode(MODEM_PWKEY, OUTPUT);
+  pinMode(MODEM_RST, OUTPUT);
+  pinMode(MODEM_POWER_ON, OUTPUT);
+  digitalWrite(MODEM_PWKEY, LOW);
+  digitalWrite(MODEM_RST, HIGH);
+  digitalWrite(MODEM_POWER_ON, HIGH);
 
   initStage++; // Init complete
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
