@@ -2,6 +2,10 @@
 
 #define LED_BUILTIN (13) // LED is connected to IO13
 
+#define MODEM_RST (5)
+#define MODEM_PWKEY (4)
+#define MODEM_POWER_ON (23)
+
 // Environment sensor includes and defines
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
@@ -205,6 +209,17 @@ void setup()
   display.setFont(&FreeMonoBold18pt7b);
   display.fillScreen(GxEPD_WHITE);
   delay(100);
+  initStage++;
+
+  // Initialize SIM800L Module
+  // Set-up modem reset, enable, power pins
+  Serial.println("[  INIT  ] modem power on");
+  pinMode(MODEM_PWKEY, OUTPUT);
+  pinMode(MODEM_RST, OUTPUT);
+  pinMode(MODEM_POWER_ON, OUTPUT);
+  digitalWrite(MODEM_PWKEY, LOW);
+  digitalWrite(MODEM_RST, HIGH);
+  digitalWrite(MODEM_POWER_ON, HIGH);
 
   initStage++; // Init complete
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
