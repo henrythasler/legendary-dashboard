@@ -1,5 +1,5 @@
 #include <unity.h>
-#include <statistics.h>
+#include <timeseries.h>
 
 #ifndef ARDUINO
 #include <stdio.h>

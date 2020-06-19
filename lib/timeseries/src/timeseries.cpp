@@ -1,4 +1,4 @@
-#include <statistics.h>
+#include <timeseries.h>
 
 Timeseries::Timeseries(uint32_t maxLength)
 {

@@ -38,7 +38,7 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <Fonts/Org_01.h>
 
 // Statistics Helper-Class
-#include <statistics.h>
+#include <timeseries.h>
 Timeseries tempStats(5000U); // ~ 1 week @ 30s sample rate
 Timeseries humStats(5000U);
 Timeseries pressStats(5000U);
@@ -105,13 +105,20 @@ void updateScreen()
   // display.drawLine(0, 280, 399, 150, GxEPD_BLACK);
   // display.drawLine(0, 281, 399, 151, GxEPD_BLACK);
 
-  Timeseries fake(40);
+  Timeseries fake(100);
+  Timeseries dampedCosine(100);
   for (int x = 0; x <= 80; x++)
   {
     fake.update(x, cos((float(x) / 20.) * (float(x) / 20.) - 1) * 20);
-    // display.drawPixel(x, 150 - cos((float(x) / 20.) * (float(x) / 20.) - 1) * 20, GxEPD_BLACK);
+    dampedCosine.update(x, exp(-float(x)/30.)*cos(float(x)/2.)*30+100);
   }
-  chart.lineChart(&display, &fake, 400, 300);
+  chart.lineChart(&display, &fake, 0, 0, 190, 150, GxEPD_BLACK);
+  fake.compact(0.2);
+  chart.lineChart(&display, &fake, 0, 150, 190, 150, GxEPD_BLACK);
+
+  chart.lineChart(&display, &dampedCosine, 210, 0, 190, 150, GxEPD_RED);
+  dampedCosine.compact(0.2);
+  chart.lineChart(&display, &dampedCosine, 210, 150, 190, 150, GxEPD_RED);
 
   display.setFont(&FreeMonoBold18pt7b);
 
@@ -213,13 +220,13 @@ void setup()
 
   // Initialize SIM800L Module
   // Set-up modem reset, enable, power pins
-  Serial.println("[  INIT  ] modem power on");
-  pinMode(MODEM_PWKEY, OUTPUT);
-  pinMode(MODEM_RST, OUTPUT);
-  pinMode(MODEM_POWER_ON, OUTPUT);
-  digitalWrite(MODEM_PWKEY, LOW);
-  digitalWrite(MODEM_RST, HIGH);
-  digitalWrite(MODEM_POWER_ON, HIGH);
+  // Serial.println("[  INIT  ] modem power on");
+  // pinMode(MODEM_PWKEY, OUTPUT);
+  // pinMode(MODEM_RST, OUTPUT);
+  // pinMode(MODEM_POWER_ON, OUTPUT);
+  // digitalWrite(MODEM_PWKEY, LOW);
+  // digitalWrite(MODEM_RST, HIGH);
+  // digitalWrite(MODEM_POWER_ON, HIGH);
 
   initStage++; // Init complete
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);

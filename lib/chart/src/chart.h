@@ -1,7 +1,7 @@
 #ifndef CHART_H
 #define CHART_H
 
-#include <statistics.h>
+#include <timeseries.h>
 
 #ifdef ARDUINO
 #include <GxEPD.h>
@@ -16,7 +16,7 @@ private:
 public:
     Chart(void);
 #ifdef ARDUINO
-    void lineChart(GxEPD_Class *display, Timeseries *timeseries, uint16_t width, uint16_t height);
+    void lineChart(GxEPD_Class *display, Timeseries *timeseries, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height, uint16_t lineColor);
 #endif
 };
 #endif
