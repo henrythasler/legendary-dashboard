@@ -2,6 +2,7 @@
 
 #define LED_BUILTIN (13) // LED is connected to IO13
 
+// Modem pinning
 #define MODEM_RST (5)
 #define MODEM_PWKEY (4)
 #define MODEM_POWER_ON (23)
@@ -39,7 +40,7 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 
 // Statistics Helper-Class
 #include <timeseries.h>
-Timeseries tempStats(5000U); // ~ 1 week @ 30s sample rate
+Timeseries tempStats(5000U);
 Timeseries humStats(5000U);
 Timeseries pressStats(5000U);
 
@@ -98,38 +99,24 @@ void doMeasurement(void)
 void updateScreen()
 {
   // Temperature Demo
-  int offset = (counter300s % 5) * 40;
   display.fillScreen(GxEPD_WHITE);
-  // display.fillRoundRect(0 + offset, offset, 128, 64, 10, GxEPD_BLACK);
-  // display.fillRoundRect(2 + offset, 2 + offset, 124, 60, 8, GxEPD_RED);
-  // display.drawLine(0, 280, 399, 150, GxEPD_BLACK);
-  // display.drawLine(0, 281, 399, 151, GxEPD_BLACK);
-
-  // test-data
-  Timeseries dampedCosine(20);
-  for (int x = 0; x <= 80; x++)
-  {
-    dampedCosine.update(x, exp(-float(x)/30.)*cos(float(x)/2.)*30-100);
-  }
-  chart.lineChart(&display, &tempStats, 5, 5, 190, 140, GxEPD_BLACK, true, false, false, -20, 40);
-  chart.lineChart(&display, &pressStats, 5, 155, 190, 140, GxEPD_BLACK, true, false, false, 600, 1100);
-  chart.lineChart(&display, &humStats, 205, 155, 190, 140, GxEPD_BLACK, true, false, false, 0, 100);
-  chart.lineChart(&display, &dampedCosine, 205, 5, 190, 140, GxEPD_RED, true);
+  display.fillRoundRect(5, 5, 138, 64, 10, GxEPD_BLACK);
+  display.fillRoundRect(7, 7, 134, 60, 8, GxEPD_RED);
 
   display.setFont(&FreeMonoBold18pt7b);
 
-  display.setTextColor(GxEPD_BLACK);
-  display.setCursor(4 + offset, 40 + offset);
-  // display.printf("%.1f°C", currentTemperatureCelsius);
+  display.setTextColor(GxEPD_WHITE);
+  display.setCursor(10, 45);
+  display.printf("%.1f C", currentTemperatureCelsius);
 
   display.setFont(&FreeSansBold18pt7b);
+  display.setTextColor(GxEPD_RED);
+  display.setCursor(180, 64);
+  display.print("Hello World!");
 
-  display.setTextColor(GxEPD_BLACK);
-  display.setCursor(4 + offset, 100 + offset);
-  // display.print("Hello World!");
-
-  // Display stats
+  // Uptime and Memory stats
   display.setFont(&Org_01);
+  display.setTextColor(GxEPD_BLACK);
   display.setCursor(0, 290);
   display.printf("up: %us\nFree: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
                  uptime.getSeconds(),
@@ -141,6 +128,12 @@ void updateScreen()
                  sizeof(humStats.data) + sizeof(Point) * humStats.data.capacity(),
                  pressStats.size(),
                  sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity());
+
+  // Linecharts
+  chart.lineChart(&display, &tempStats, 0, 150, 130, 100, GxEPD_RED);
+  chart.lineChart(&display, &humStats, 135, 150, 130, 100, GxEPD_BLACK);
+  chart.lineChart(&display, &pressStats, 270, 150, 130, 100, GxEPD_BLACK, false, true, true, 600, 1100);
+
   display.update();
 }
 
@@ -216,13 +209,13 @@ void setup()
 
   // Initialize SIM800L Module
   // Set-up modem reset, enable, power pins
-  // Serial.println("[  INIT  ] modem power on");
-  // pinMode(MODEM_PWKEY, OUTPUT);
-  // pinMode(MODEM_RST, OUTPUT);
-  // pinMode(MODEM_POWER_ON, OUTPUT);
-  // digitalWrite(MODEM_PWKEY, LOW);
-  // digitalWrite(MODEM_RST, HIGH);
-  // digitalWrite(MODEM_POWER_ON, HIGH);
+  Serial.println("[  INIT  ] modem power-on");
+  pinMode(MODEM_PWKEY, OUTPUT);
+  pinMode(MODEM_RST, OUTPUT);
+  pinMode(MODEM_POWER_ON, OUTPUT);
+  digitalWrite(MODEM_PWKEY, LOW);
+  digitalWrite(MODEM_RST, HIGH);
+  digitalWrite(MODEM_POWER_ON, HIGH);
 
   initStage++; // Init complete
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
