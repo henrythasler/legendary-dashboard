@@ -45,9 +45,9 @@ void test_function_statistics_limiter(void)
   stats.update(4, 4);
   stats.update(5, 5);
 
-  TEST_ASSERT_EQUAL_FLOAT(0., stats.min);
-  TEST_ASSERT_EQUAL_FLOAT(5., stats.max);
-  TEST_ASSERT_EQUAL_FLOAT(3.5, stats.mean());
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE(2., stats.min, "stats.min");
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE(5., stats.max, "stats.max");
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE(3.5, stats.mean(), "stats.mean()");
   TEST_ASSERT_EQUAL_UINT32(4, stats.size());
 
   TEST_ASSERT_EQUAL_INT32(2, stats.data.at(0).first);

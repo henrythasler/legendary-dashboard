@@ -9,13 +9,17 @@ Timeseries::Timeseries(uint32_t maxLength)
 
 bool Timeseries::update(uint32_t timestamp, float value)
 {
+  bool updateStats = false;
   min = value < min ? value : min;
   max = value > max ? value : max;
 
   try
   {
     if (data.size() >= maxHistoryLength)
+    {
+      updateStats = true;
       data.erase(data.begin());
+    }
     data.push_back(Point(timestamp, value));
   }
   catch (const exception &e)
@@ -26,6 +30,19 @@ bool Timeseries::update(uint32_t timestamp, float value)
     printf("Error in Statistics::update(): %s\n", e.what());
 #endif
     return false;
+  }
+
+  if (updateStats)
+  {
+    min = 1e12;
+    max = -1e12;
+    float val=0;
+    for (PointIterator i = data.begin(); i != data.end(); ++i)
+    {
+      val = float(Point(*i).second);
+      min = val < min ? val : min;
+      max = val > max ? val : max;
+    }
   }
 
   id++;

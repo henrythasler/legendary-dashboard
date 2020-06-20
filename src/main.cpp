@@ -105,20 +105,16 @@ void updateScreen()
   // display.drawLine(0, 280, 399, 150, GxEPD_BLACK);
   // display.drawLine(0, 281, 399, 151, GxEPD_BLACK);
 
-  Timeseries fake(100);
-  Timeseries dampedCosine(100);
+  // test-data
+  Timeseries dampedCosine(20);
   for (int x = 0; x <= 80; x++)
   {
-    fake.update(x, cos((float(x) / 20.) * (float(x) / 20.) - 1) * 20);
-    dampedCosine.update(x, exp(-float(x)/30.)*cos(float(x)/2.)*30+100);
+    dampedCosine.update(x, exp(-float(x)/30.)*cos(float(x)/2.)*30-100);
   }
-  chart.lineChart(&display, &fake, 0, 0, 190, 150, GxEPD_BLACK);
-  fake.compact(0.2);
-  chart.lineChart(&display, &fake, 0, 150, 190, 150, GxEPD_BLACK);
-
-  chart.lineChart(&display, &dampedCosine, 210, 0, 190, 150, GxEPD_RED);
-  dampedCosine.compact(0.2);
-  chart.lineChart(&display, &dampedCosine, 210, 150, 190, 150, GxEPD_RED);
+  chart.lineChart(&display, &tempStats, 5, 5, 190, 140, GxEPD_BLACK, true, false, false, -20, 40);
+  chart.lineChart(&display, &pressStats, 5, 155, 190, 140, GxEPD_BLACK, true, false, false, 600, 1100);
+  chart.lineChart(&display, &humStats, 205, 155, 190, 140, GxEPD_BLACK, true, false, false, 0, 100);
+  chart.lineChart(&display, &dampedCosine, 205, 5, 190, 140, GxEPD_RED, true);
 
   display.setFont(&FreeMonoBold18pt7b);
 
