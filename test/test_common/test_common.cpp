@@ -1,5 +1,5 @@
 #include <unity.h>
-#include <statistics.h>
+#include <timeseries.h>
 
 #ifndef ARDUINO
 #include <stdio.h>
@@ -7,7 +7,7 @@
 
 void test_function_statistics_initial(void)
 {
-  Statistics stats;
+  Timeseries stats;
   TEST_ASSERT_EQUAL_FLOAT(float(1e12), stats.min);
   TEST_ASSERT_EQUAL_FLOAT(float(-1e12), stats.max);
   TEST_ASSERT_EQUAL_FLOAT(0, stats.mean());
@@ -16,7 +16,7 @@ void test_function_statistics_initial(void)
 
 void test_function_statistics_single(void)
 {
-  Statistics stats(8);
+  Timeseries stats(8);
   stats.update(0, 2);
   TEST_ASSERT_EQUAL_FLOAT(2., stats.min);
   TEST_ASSERT_EQUAL_FLOAT(2., stats.max);
@@ -26,7 +26,7 @@ void test_function_statistics_single(void)
 
 void test_function_statistics_simple(void)
 {
-  Statistics stats(8);
+  Timeseries stats(8);
   stats.update(0, 0);
   stats.update(1, 1);
   TEST_ASSERT_EQUAL_FLOAT(0., stats.min);
@@ -37,7 +37,7 @@ void test_function_statistics_simple(void)
 
 void test_function_statistics_limiter(void)
 {
-  Statistics stats(4);
+  Timeseries stats(4);
   stats.update(0, 0);
   stats.update(1, 1);
   stats.update(2, 2);
@@ -45,15 +45,15 @@ void test_function_statistics_limiter(void)
   stats.update(4, 4);
   stats.update(5, 5);
 
-  TEST_ASSERT_EQUAL_FLOAT(0., stats.min);
-  TEST_ASSERT_EQUAL_FLOAT(5., stats.max);
-  TEST_ASSERT_EQUAL_FLOAT(3.5, stats.mean());
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE(2., stats.min, "stats.min");
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE(5., stats.max, "stats.max");
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE(3.5, stats.mean(), "stats.mean()");
   TEST_ASSERT_EQUAL_UINT32(4, stats.size());
 
-  TEST_ASSERT_EQUAL_INT32(2, stats.history.at(0).first);
-  TEST_ASSERT_EQUAL_FLOAT(2., stats.history.at(0).second);
-  TEST_ASSERT_EQUAL_INT32(5, stats.history.at(3).first);
-  TEST_ASSERT_EQUAL_FLOAT(5., stats.history.at(3).second);
+  TEST_ASSERT_EQUAL_INT32(2, stats.data.at(0).first);
+  TEST_ASSERT_EQUAL_FLOAT(2., stats.data.at(0).second);
+  TEST_ASSERT_EQUAL_INT32(5, stats.data.at(3).first);
+  TEST_ASSERT_EQUAL_FLOAT(5., stats.data.at(3).second);
 }
 
 void test_function_statistics_huge(void)
@@ -63,7 +63,7 @@ void test_function_statistics_huge(void)
   maxEntries = 5000;
 #endif
 
-  Statistics stats(maxEntries);
+  Timeseries stats(maxEntries);
   for (int i = 0; i < 50000; i++)
   {
     stats.update(i, i % 100);
@@ -71,8 +71,8 @@ void test_function_statistics_huge(void)
     //         if (!(i % 100))
     //             Serial.printf("%u: Object %u KiB of %u KiB   Heap: %u KiB (%uKiB free);  maxAlloc: %u KiB;   MinFreeHeap: %u KiB\n",
     //             i,
-    //             (sizeof(stats.history) + sizeof(Point) * stats.history.capacity())/1024,
-    //             stats.history.max_size() / 1024,
+    //             (sizeof(stats.data) + sizeof(Point) * stats.data.capacity())/1024,
+    //             stats.data.max_size() / 1024,
     //             ESP.getHeapSize()/1024,
     //             ESP.getFreeHeap() / 1024,
     //             ESP.getMaxAllocHeap()/1024,
@@ -86,7 +86,7 @@ void test_function_statistics_huge(void)
 
 #ifndef ARDUINO
   char message[64];
-  int size = sizeof(stats.history) + sizeof(Point) * stats.history.capacity();
+  int size = sizeof(stats.data) + sizeof(Point) * stats.data.capacity();
   snprintf(message, 64, "size=%u", size);
   TEST_MESSAGE(message);
 #endif
@@ -94,7 +94,7 @@ void test_function_statistics_huge(void)
 
 void test_function_statistics_rdp_synth1(void)
 {
-  Statistics stats;
+  Timeseries stats;
   vector<Point>::const_iterator i;
 
   vector<Point> examplePoint;
@@ -118,7 +118,7 @@ void test_function_statistics_rdp_synth1(void)
 
 void test_function_statistics_rdp_synth2(void)
 {
-  Statistics stats;
+  Timeseries stats;
   vector<Point>::const_iterator i;
 
   vector<Point> examplePoint;
@@ -146,7 +146,7 @@ void test_function_statistics_rdp_synth2(void)
 // from https://github.com/LukaszWiktor/series-reducer
 void test_function_statistics_rdp_math(void)
 {
-  Statistics stats;
+  Timeseries stats;
   vector<Point>::const_iterator i;
 
   float_vec_t exampleFlat;
@@ -183,7 +183,7 @@ void test_function_statistics_rdp_math(void)
 
 void test_function_statistics_compact_math(void)
 {
-  Statistics stats(256);
+  Timeseries stats(256);
   float_vec_t exampleFlat;
 
   for (int x = 0; x <= 80; x++)
@@ -192,14 +192,14 @@ void test_function_statistics_compact_math(void)
   }
 
 #ifndef ARDUINO
-  int before = sizeof(stats.history) + sizeof(Point) * stats.history.capacity();
+  int before = sizeof(stats.data) + sizeof(Point) * stats.data.capacity();
 #endif
   stats.compact(0.2);
 
 #ifndef ARDUINO
-  int after = sizeof(stats.history) + sizeof(Point) * stats.history.capacity();
+  int after = sizeof(stats.data) + sizeof(Point) * stats.data.capacity();
   char message[64];
-  // for (vector<Point>::const_iterator i = stats.history.begin(); i != stats.history.end(); ++i)
+  // for (vector<Point>::const_iterator i = stats.data.begin(); i != stats.data.end(); ++i)
   // {
   //     snprintf(message, 64, "%.2f, %.2f", float(Point(*i).first), float(Point(*i).second));
   //     TEST_MESSAGE(message);
@@ -208,35 +208,35 @@ void test_function_statistics_compact_math(void)
   TEST_MESSAGE(message);
 #endif
 
-  TEST_ASSERT_EQUAL_INT16_MESSAGE(39, stats.history.size(), "stats.history.size()");
+  TEST_ASSERT_EQUAL_INT16_MESSAGE(39, stats.data.size(), "stats.data.size()");
 }
 
 void test_function_statistics_compact_throw(void)
 {
-  Statistics stats;
+  Timeseries stats;
   stats.update(0, 0);
   bool res = stats.compact();
   TEST_ASSERT_FALSE(res);
-  TEST_ASSERT_EQUAL_INT16_MESSAGE(1, stats.history.size(), "stats.history.size()");
+  TEST_ASSERT_EQUAL_INT16_MESSAGE(1, stats.data.size(), "stats.data.size()");
 }
 
 void test_function_statistics_compact_huge(void)
 {
   try
   {
-    Statistics stats(5000);
+    Timeseries stats(5000);
     for (uint32_t x = 1; x <= 100000; x++)
     {
       stats.update(x-1, 1);
       if (!(x % 100))
         stats.compact();
     }
-    TEST_ASSERT_EQUAL_INT16_MESSAGE(2, stats.history.size(), "stats.history.size()");
+    TEST_ASSERT_EQUAL_INT16_MESSAGE(2, stats.data.size(), "stats.data.size()");
 
-    TEST_ASSERT_EQUAL_INT32(0, stats.history.front().first);
-    TEST_ASSERT_EQUAL_FLOAT(1., stats.history.front().second);
-    TEST_ASSERT_EQUAL_INT32(99999, stats.history.back().first);
-    TEST_ASSERT_EQUAL_FLOAT(1., stats.history.back().second);
+    TEST_ASSERT_EQUAL_INT32(0, stats.data.front().first);
+    TEST_ASSERT_EQUAL_FLOAT(1., stats.data.front().second);
+    TEST_ASSERT_EQUAL_INT32(99999, stats.data.back().first);
+    TEST_ASSERT_EQUAL_FLOAT(1., stats.data.back().second);
   }
   catch (const std::exception &e)
   {

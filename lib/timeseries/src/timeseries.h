@@ -17,7 +17,7 @@ typedef std::vector<int8_t> int8_vec_t;
 typedef std::pair<uint32_t, float> Point;
 typedef vector<Point>::const_iterator PointIterator;
 
-class Statistics
+class Timeseries
 {
 public:
   float min;
@@ -25,9 +25,9 @@ public:
   uint32_t maxHistoryLength;
   uint32_t id = 0;
 
-  vector<Point> history;
+  vector<Point> data;
 
-  Statistics(uint32_t maxLength = 32);
+  Timeseries(uint32_t maxLength = 32);
 
   bool update(uint32_t timestamp, float value);
   uint32_t size();
