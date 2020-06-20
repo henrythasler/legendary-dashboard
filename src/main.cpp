@@ -34,6 +34,7 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #define HAS_RED_COLOR
 
 // FreeFonts from Adafruit_GFX
+#include <Fonts/FreeSansBold9pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeSansBold18pt7b.h>
 #include <Fonts/Org_01.h>
@@ -130,9 +131,22 @@ void updateScreen()
                  sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity());
 
   // Linecharts
+  display.setFont(&FreeSansBold9pt7b);
+  display.setTextColor(GxEPD_BLACK);
+  display.setCursor(10, 145);
+  display.print("Temp");
+  display.setCursor(145, 145);
+  display.print("Hum");
+  display.setCursor(280, 145);
+  display.print("Press");
+
+  display.drawFastHLine(0,149,400, GxEPD_BLACK);
+  display.drawFastVLine(133,149,102, GxEPD_BLACK);
+  display.drawFastVLine(266,149,102, GxEPD_BLACK);
   chart.lineChart(&display, &tempStats, 0, 150, 130, 100, GxEPD_RED);
   chart.lineChart(&display, &humStats, 135, 150, 130, 100, GxEPD_BLACK);
   chart.lineChart(&display, &pressStats, 270, 150, 130, 100, GxEPD_BLACK, false, true, true, 600, 1100);
+  display.drawFastHLine(0,251,400, GxEPD_BLACK);
 
   display.update();
 }
