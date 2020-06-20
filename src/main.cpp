@@ -131,6 +131,7 @@ void updateScreen()
                  sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity());
 
   // Linecharts
+  // Chart Title
   display.setFont(&FreeSansBold9pt7b);
   display.setTextColor(GxEPD_BLACK);
   display.setCursor(10, 145);
@@ -140,13 +141,34 @@ void updateScreen()
   display.setCursor(280, 145);
   display.print("Press");
 
+  // Y-Axis Labels
+  display.setFont(&Org_01);
+  display.setTextColor(GxEPD_BLACK);
+  display.setCursor(2, 155);
+  display.printf("%.1f", tempStats.max);
+  display.setCursor(2, 249);
+  display.printf("%.1f", tempStats.min);
+
+  display.setCursor(135, 155);
+  display.printf("%.0f", humStats.max);
+  display.setCursor(135, 249);
+  display.printf("%.0f", humStats.min);
+
+  display.setCursor(268, 155);
+  display.printf("%.0f", pressStats.max);
+  display.setCursor(268, 249);
+  display.printf("%.0f", pressStats.min);
+
+  // Frame
   display.drawFastHLine(0,149,400, GxEPD_BLACK);
+  display.drawFastHLine(0,251,400, GxEPD_BLACK);
   display.drawFastVLine(133,149,102, GxEPD_BLACK);
   display.drawFastVLine(266,149,102, GxEPD_BLACK);
+
+  // Charts
   chart.lineChart(&display, &tempStats, 0, 150, 130, 100, GxEPD_RED);
   chart.lineChart(&display, &humStats, 135, 150, 130, 100, GxEPD_BLACK);
   chart.lineChart(&display, &pressStats, 270, 150, 130, 100, GxEPD_BLACK, false, true, true, 600, 1100);
-  display.drawFastHLine(0,251,400, GxEPD_BLACK);
 
   display.update();
 }
