@@ -155,9 +155,9 @@ void updateScreen()
   display.printf("%.0f", humStats.min);
 
   display.setCursor(268, 155);
-  display.printf("%.0f", pressStats.max);
+  display.printf("%.1f", pressStats.max);
   display.setCursor(268, 249);
-  display.printf("%.0f", pressStats.min);
+  display.printf("%.1f", pressStats.min);
 
   // Frame
   display.drawFastHLine(0,149,400, GxEPD_BLACK);
@@ -168,7 +168,7 @@ void updateScreen()
   // Charts
   chart.lineChart(&display, &tempStats, 0, 150, 130, 100, GxEPD_RED);
   chart.lineChart(&display, &humStats, 135, 150, 130, 100, GxEPD_BLACK);
-  chart.lineChart(&display, &pressStats, 270, 150, 130, 100, GxEPD_BLACK, false, true, true, 600, 1100);
+  chart.lineChart(&display, &pressStats, 270, 150, 130, 100, GxEPD_BLACK);
 
   display.update();
 }
