@@ -2,11 +2,6 @@
 
 #define LED_BUILTIN (13) // LED is connected to IO13
 
-// Modem pinning
-#define MODEM_RST (5)
-#define MODEM_PWKEY (4)
-#define MODEM_POWER_ON (23)
-
 // Environment sensor includes and defines
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
@@ -21,6 +16,25 @@
 TwoWire I2CBME = TwoWire(0); // set up a new Wire-Instance for BME280 Environment Sensor
 Adafruit_BME280 bme;         // use I2C
 bool environmentSensorAvailable = false;
+
+// Modem pinning
+#define MODEM_RST            (5)
+#define MODEM_PWKEY          (4)
+#define MODEM_POWER_ON       (23)
+#define MODEM_TX             (27)
+#define MODEM_RX             (26)
+
+// Configure TinyGSM library
+#define TINY_GSM_MODEM_SIM800        // Modem is SIM800
+#define TINY_GSM_RX_BUFFER   (1024)  // Set RX buffer to 1Kb
+#include <TinyGsmClient.h>
+
+// SIM800L includes, defines and variables
+#define SerialAT  Serial1
+#define SMS_TARGET  "+491708939980"
+// const char simPIN[]   = "1234"; // SIM card PIN code, if any
+TinyGsm modem(SerialAT);
+bool modemAvailable = false;
 
 // Display stuff
 #include <GxEPD.h>
@@ -58,6 +72,16 @@ float currentTemperatureCelsius = 0;
 float currentHumidityPercent = 0;
 float currentPressurePascal = 0;
 
+uint8_t currentSignalStrength = 0;
+int currentYear = 0;
+int currentMonth = 0;
+int currentDay = 0;
+int currentHour = 0;
+int currentMin = 0;
+int currentSec = 0;
+float currentTimezone = 0.0;
+
+
 // Track initialisation
 uint32_t initStage = 0;
 
@@ -67,6 +91,30 @@ uint32_t counterBase = 0;
 uint32_t counter300s = 0;
 uint32_t counter1h = 0;
 bool enableDisplay = true; // display output can be disabled for testing purposes with this flag
+
+/**
+ * Update all information from modem.
+ * 
+ ******************************************************/
+void updateModemInfo(void)
+{
+  if (modemAvailable)
+  {
+    // read current data
+    currentSignalStrength = modem.getSignalQuality();
+    Serial.print("[ MODEM  ] Sigal Quality [0-31]: ");
+    Serial.println(currentSignalStrength);
+
+    modem.getNetworkTime(&currentYear, &currentMonth, &currentDay, &currentHour, &currentMin, &currentSec, &currentTimezone);
+    Serial.printf("[ MODEM  ] Current Network Time (Values) - Year: %d, Month: %02d, Day: %02d, Hour: %02d, Minute: %02d, Second: %02d, Timezone: %.1f\n",
+        currentYear, currentMonth, currentDay, currentHour, currentMin, currentSec, currentTimezone);
+  
+  }
+  else
+  {
+    Serial.println("[  WARN  ] modem not available.");
+  }
+}
 
 /**
  * Sample measurements from environment sensor.
@@ -110,10 +158,23 @@ void updateScreen()
   display.setCursor(10, 45);
   display.printf("%.1f C", currentTemperatureCelsius);
 
+  // Date
   display.setFont(&FreeSansBold18pt7b);
   display.setTextColor(GxEPD_RED);
-  display.setCursor(180, 64);
-  display.print("Hello World!");
+  display.setCursor(160, 45);
+  display.printf("%02d.%02d.%04d", currentDay, currentMonth, currentYear);
+
+  // Udate Time
+  display.setFont(&FreeSansBold9pt7b);
+  display.setTextColor(GxEPD_BLACK);
+  display.setCursor(160, 65);
+  display.printf("Last updated: %02d:%02d:%02d", currentHour, currentMin, currentSec);
+  
+  // Signal strength
+  display.setFont(&FreeSansBold9pt7b);
+  display.setTextColor(GxEPD_BLACK);
+  display.setCursor(160, 85);
+  display.printf("Signal strength: %2d of 31", currentSignalStrength);
 
   // Uptime and Memory stats
   display.setFont(&Org_01);
@@ -169,6 +230,7 @@ void updateScreen()
   chart.lineChart(&display, &tempStats, 0, 150, 130, 100, GxEPD_RED);
   chart.lineChart(&display, &humStats, 135, 150, 130, 100, GxEPD_BLACK);
   chart.lineChart(&display, &pressStats, 270, 150, 130, 100, GxEPD_BLACK, false, true, true, 600, 1100);
+
 
   display.update();
 }
@@ -253,6 +315,45 @@ void setup()
   digitalWrite(MODEM_RST, HIGH);
   digitalWrite(MODEM_POWER_ON, HIGH);
 
+  // Set GSM module baud rate and UART pins
+  Serial.println("[  INIT  ] Initializing serial interface to modem...");
+  SerialAT.begin(115200, SERIAL_8N1, MODEM_RX, MODEM_TX);
+  delay(3000);
+  initStage++;
+
+  // Restart takes quite some time
+  // use modem.init() if you don't need the complete restart
+  Serial.println("[  INIT  ] Initializing modem...");
+  modem.restart();
+  
+  String name = modem.getModemName();
+  Serial.print("[  INIT  ] Modem Name: ");
+  Serial.print(name);
+  String modemInfo = modem.getModemInfo();
+  Serial.print(", Modem Info: ");
+  Serial.println(modemInfo);
+  initStage++;
+
+  // Unlock your SIM card with a PIN if needed
+  // if (strlen(simPIN) && modem.getSimStatus() != 3 ) {
+  //   Serial.println("Unlocking SIM...");
+  //   modem.simUnlock(simPIN);
+  // }
+
+  Serial.print("[  INIT  ] Waiting for network...");
+  if (!modem.waitForNetwork(240000L)) {
+    Serial.println(" fail");
+    Serial.println("[ ERROR ] - Could not connect to mobile network, check antenna!");
+    modemAvailable = false;
+  }
+  else {
+    Serial.println(" OK");
+    modemAvailable = true;
+  }
+
+  // Network time is not set properly if requested too early after network connection
+  delay(4000);
+  
   initStage++; // Init complete
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
@@ -303,6 +404,9 @@ void loop()
   // e-Paper Display MUST not be updated more often than every 180s to ensure lifetime function
   if (!(counterBase % (300000L / SCHEDULER_MAIN_LOOP_MS)))
   {
+    // update modem Information every time display is updated, to get current timestamp
+    updateModemInfo();
+  
     if (enableDisplay)
     {
       Serial.println("[  DISP  ] Updating...");
