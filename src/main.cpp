@@ -321,9 +321,9 @@ void loop()
       humStats.trim(uptime.getSeconds(), 7200);
       pressStats.trim(uptime.getSeconds(), 7200);
 
-      tempStats.compact(0.2);
-      humStats.compact(0.2);
-      pressStats.compact(0.2);
+      tempStats.compact(0.1);
+      humStats.compact(0.4);
+      pressStats.compact(0.1);
     }
     counter1h++;
   }
