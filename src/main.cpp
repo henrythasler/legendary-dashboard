@@ -160,10 +160,10 @@ void updateScreen()
   display.printf("%.1f", pressStats.min);
 
   // Frame
-  display.drawFastHLine(0,149,400, GxEPD_BLACK);
-  display.drawFastHLine(0,251,400, GxEPD_BLACK);
-  display.drawFastVLine(133,149,102, GxEPD_BLACK);
-  display.drawFastVLine(266,149,102, GxEPD_BLACK);
+  display.drawFastHLine(0, 149, 400, GxEPD_BLACK);
+  display.drawFastHLine(0, 251, 400, GxEPD_BLACK);
+  display.drawFastVLine(133, 149, 102, GxEPD_BLACK);
+  display.drawFastVLine(266, 149, 102, GxEPD_BLACK);
 
   // Charts
   chart.lineChart(&display, &tempStats, 0, 150, 130, 100, GxEPD_RED);
@@ -303,6 +303,17 @@ void loop()
   // e-Paper Display MUST not be updated more often than every 180s to ensure lifetime function
   if (!(counterBase % (300000L / SCHEDULER_MAIN_LOOP_MS)))
   {
+    if (counter300s > 0) // don't compact on startup
+    {
+      tempStats.trim(uptime.getSeconds(), 8 * 3600);
+      humStats.trim(uptime.getSeconds(), 8 * 3600);
+      pressStats.trim(uptime.getSeconds(), 8 * 3600);
+
+      tempStats.compact(0.05);
+      humStats.compact(0.2);
+      pressStats.compact(0.1);
+    }
+
     if (enableDisplay)
     {
       Serial.println("[  DISP  ] Updating...");
@@ -315,16 +326,6 @@ void loop()
   // 1h Tasks
   if (!(counterBase % (3600000L / SCHEDULER_MAIN_LOOP_MS)))
   {
-    if (counter1h > 0) // don't compact on startup
-    {
-      tempStats.trim(uptime.getSeconds(), 7200);
-      humStats.trim(uptime.getSeconds(), 7200);
-      pressStats.trim(uptime.getSeconds(), 7200);
-
-      tempStats.compact(0.1);
-      humStats.compact(0.4);
-      pressStats.compact(0.1);
-    }
     counter1h++;
   }
 
