@@ -83,9 +83,9 @@ void doMeasurement(void)
 
     // update statistics for each measurement
     uint32_t timestamp = uptime.getSeconds();
-    tempStats.update(timestamp, currentTemperatureCelsius);
-    humStats.update(timestamp, currentHumidityPercent);
-    pressStats.update(timestamp, currentPressurePascal / 100.); // use hPa
+    tempStats.push(timestamp, currentTemperatureCelsius);
+    humStats.push(timestamp, currentHumidityPercent);
+    pressStats.push(timestamp, currentPressurePascal / 100.); // use hPa
   }
   else
   {

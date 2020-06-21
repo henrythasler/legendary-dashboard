@@ -7,53 +7,53 @@
 
 void test_function_statistics_initial(void)
 {
-  Timeseries stats;
-  TEST_ASSERT_EQUAL_FLOAT(float(1e12), stats.min);
-  TEST_ASSERT_EQUAL_FLOAT(float(-1e12), stats.max);
-  TEST_ASSERT_EQUAL_FLOAT(0, stats.mean());
-  TEST_ASSERT_EQUAL_UINT32(0, stats.size());
+  Timeseries series;
+  TEST_ASSERT_EQUAL_FLOAT(float(1e12), series.min);
+  TEST_ASSERT_EQUAL_FLOAT(float(-1e12), series.max);
+  TEST_ASSERT_EQUAL_FLOAT(0, series.mean());
+  TEST_ASSERT_EQUAL_UINT32(0, series.size());
 }
 
 void test_function_statistics_single(void)
 {
-  Timeseries stats(8);
-  stats.update(0, 2);
-  TEST_ASSERT_EQUAL_FLOAT(2., stats.min);
-  TEST_ASSERT_EQUAL_FLOAT(2., stats.max);
-  TEST_ASSERT_EQUAL_FLOAT(2., stats.mean());
-  TEST_ASSERT_EQUAL_UINT32(1, stats.size());
+  Timeseries series(8);
+  series.push(0, 2);
+  TEST_ASSERT_EQUAL_FLOAT(2., series.min);
+  TEST_ASSERT_EQUAL_FLOAT(2., series.max);
+  TEST_ASSERT_EQUAL_FLOAT(2., series.mean());
+  TEST_ASSERT_EQUAL_UINT32(1, series.size());
 }
 
 void test_function_statistics_simple(void)
 {
-  Timeseries stats(8);
-  stats.update(0, 0);
-  stats.update(1, 1);
-  TEST_ASSERT_EQUAL_FLOAT(0., stats.min);
-  TEST_ASSERT_EQUAL_FLOAT(1., stats.max);
-  TEST_ASSERT_EQUAL_FLOAT(.5, stats.mean());
-  TEST_ASSERT_EQUAL_UINT32(2, stats.size());
+  Timeseries series(8);
+  series.push(0, 0);
+  series.push(1, 1);
+  TEST_ASSERT_EQUAL_FLOAT(0., series.min);
+  TEST_ASSERT_EQUAL_FLOAT(1., series.max);
+  TEST_ASSERT_EQUAL_FLOAT(.5, series.mean());
+  TEST_ASSERT_EQUAL_UINT32(2, series.size());
 }
 
 void test_function_statistics_limiter(void)
 {
-  Timeseries stats(4);
-  stats.update(0, 0);
-  stats.update(1, 1);
-  stats.update(2, 2);
-  stats.update(3, 3);
-  stats.update(4, 4);
-  stats.update(5, 5);
+  Timeseries series(4);
+  series.push(0, 0);
+  series.push(1, 1);
+  series.push(2, 2);
+  series.push(3, 3);
+  series.push(4, 4);
+  series.push(5, 5);
 
-  TEST_ASSERT_EQUAL_FLOAT_MESSAGE(2., stats.min, "stats.min");
-  TEST_ASSERT_EQUAL_FLOAT_MESSAGE(5., stats.max, "stats.max");
-  TEST_ASSERT_EQUAL_FLOAT_MESSAGE(3.5, stats.mean(), "stats.mean()");
-  TEST_ASSERT_EQUAL_UINT32(4, stats.size());
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE(2., series.min, "series.min");
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE(5., series.max, "series.max");
+  TEST_ASSERT_EQUAL_FLOAT_MESSAGE(3.5, series.mean(), "series.mean()");
+  TEST_ASSERT_EQUAL_UINT32(4, series.size());
 
-  TEST_ASSERT_EQUAL_INT32(2, stats.data.at(0).first);
-  TEST_ASSERT_EQUAL_FLOAT(2., stats.data.at(0).second);
-  TEST_ASSERT_EQUAL_INT32(5, stats.data.at(3).first);
-  TEST_ASSERT_EQUAL_FLOAT(5., stats.data.at(3).second);
+  TEST_ASSERT_EQUAL_INT32(2, series.data.at(0).first);
+  TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).second);
+  TEST_ASSERT_EQUAL_INT32(5, series.data.at(3).first);
+  TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(3).second);
 }
 
 void test_function_statistics_huge(void)
@@ -63,30 +63,30 @@ void test_function_statistics_huge(void)
   maxEntries = 5000;
 #endif
 
-  Timeseries stats(maxEntries);
+  Timeseries series(maxEntries);
   for (int i = 0; i < 50000; i++)
   {
-    stats.update(i, i % 100);
+    series.push(i, i % 100);
     // #ifdef ARDUINO
     //         if (!(i % 100))
     //             Serial.printf("%u: Object %u KiB of %u KiB   Heap: %u KiB (%uKiB free);  maxAlloc: %u KiB;   MinFreeHeap: %u KiB\n",
     //             i,
-    //             (sizeof(stats.data) + sizeof(Point) * stats.data.capacity())/1024,
-    //             stats.data.max_size() / 1024,
+    //             (sizeof(series.data) + sizeof(Point) * series.data.capacity())/1024,
+    //             series.data.max_size() / 1024,
     //             ESP.getHeapSize()/1024,
     //             ESP.getFreeHeap() / 1024,
     //             ESP.getMaxAllocHeap()/1024,
     //             ESP.getMinFreeHeap()/1024);
     // #endif
   }
-  TEST_ASSERT_EQUAL_FLOAT(0., stats.min);
-  TEST_ASSERT_EQUAL_FLOAT(99., stats.max);
-  TEST_ASSERT_EQUAL_FLOAT(49.5, stats.mean());
-  TEST_ASSERT_EQUAL_UINT32(maxEntries, stats.size());
+  TEST_ASSERT_EQUAL_FLOAT(0., series.min);
+  TEST_ASSERT_EQUAL_FLOAT(99., series.max);
+  TEST_ASSERT_EQUAL_FLOAT(49.5, series.mean());
+  TEST_ASSERT_EQUAL_UINT32(maxEntries, series.size());
 
 #ifndef ARDUINO
   char message[64];
-  int size = sizeof(stats.data) + sizeof(Point) * stats.data.capacity();
+  int size = sizeof(series.data) + sizeof(Point) * series.data.capacity();
   snprintf(message, 64, "size=%u", size);
   TEST_MESSAGE(message);
 #endif
@@ -94,7 +94,7 @@ void test_function_statistics_huge(void)
 
 void test_function_statistics_rdp_synth1(void)
 {
-  Timeseries stats;
+  Timeseries series;
   vector<Point>::const_iterator i;
 
   vector<Point> examplePoint;
@@ -105,7 +105,7 @@ void test_function_statistics_rdp_synth1(void)
   examplePoint.push_back(Point(3., 3.));
   examplePoint.push_back(Point(4., 4.));
 
-  stats.ramerDouglasPeucker(examplePoint, 1.0, pointListOut);
+  series.ramerDouglasPeucker(examplePoint, 1.0, pointListOut);
 
   TEST_ASSERT_EQUAL_INT16_MESSAGE(2, pointListOut.size(), "pointListOut.size()");
 
@@ -118,7 +118,7 @@ void test_function_statistics_rdp_synth1(void)
 
 void test_function_statistics_rdp_synth2(void)
 {
-  Timeseries stats;
+  Timeseries series;
   vector<Point>::const_iterator i;
 
   vector<Point> examplePoint;
@@ -129,7 +129,7 @@ void test_function_statistics_rdp_synth2(void)
   examplePoint.push_back(Point(3, 1.));
   examplePoint.push_back(Point(3, 2.));
 
-  stats.ramerDouglasPeucker(examplePoint, 1.0, pointListOut);
+  series.ramerDouglasPeucker(examplePoint, 1.0, pointListOut);
 
   TEST_ASSERT_EQUAL_INT16_MESSAGE(3, pointListOut.size(), "pointListOut.size()");
 
@@ -146,7 +146,7 @@ void test_function_statistics_rdp_synth2(void)
 // from https://github.com/LukaszWiktor/series-reducer
 void test_function_statistics_rdp_math(void)
 {
-  Timeseries stats;
+  Timeseries series;
   vector<Point>::const_iterator i;
 
   float_vec_t exampleFlat;
@@ -160,7 +160,7 @@ void test_function_statistics_rdp_math(void)
     exampleFlat.push_back(cos((float(x) / 20.) * (float(x) / 20.) - 1) * 20);
   }
 
-  stats.ramerDouglasPeucker(examplePoint, .2, pointListOut);
+  series.ramerDouglasPeucker(examplePoint, .2, pointListOut);
   pointListOut.shrink_to_fit();
 
 #ifndef ARDUINO
@@ -183,23 +183,23 @@ void test_function_statistics_rdp_math(void)
 
 void test_function_statistics_compact_math(void)
 {
-  Timeseries stats(256);
+  Timeseries series(256);
   float_vec_t exampleFlat;
 
   for (int x = 0; x <= 80; x++)
   {
-    stats.update(x, cos((float(x) / 20.) * (float(x) / 20.) - 1) * 20);
+    series.push(x, cos((float(x) / 20.) * (float(x) / 20.) - 1) * 20);
   }
 
 #ifndef ARDUINO
-  int before = sizeof(stats.data) + sizeof(Point) * stats.data.capacity();
+  int before = sizeof(series.data) + sizeof(Point) * series.data.capacity();
 #endif
-  stats.compact(0.2);
+  series.compact(0.2);
 
 #ifndef ARDUINO
-  int after = sizeof(stats.data) + sizeof(Point) * stats.data.capacity();
+  int after = sizeof(series.data) + sizeof(Point) * series.data.capacity();
   char message[64];
-  // for (vector<Point>::const_iterator i = stats.data.begin(); i != stats.data.end(); ++i)
+  // for (vector<Point>::const_iterator i = series.data.begin(); i != series.data.end(); ++i)
   // {
   //     snprintf(message, 64, "%.2f, %.2f", float(Point(*i).first), float(Point(*i).second));
   //     TEST_MESSAGE(message);
@@ -208,35 +208,35 @@ void test_function_statistics_compact_math(void)
   TEST_MESSAGE(message);
 #endif
 
-  TEST_ASSERT_EQUAL_INT16_MESSAGE(39, stats.data.size(), "stats.data.size()");
+  TEST_ASSERT_EQUAL_INT16_MESSAGE(39, series.data.size(), "series.data.size()");
 }
 
 void test_function_statistics_compact_throw(void)
 {
-  Timeseries stats;
-  stats.update(0, 0);
-  bool res = stats.compact();
+  Timeseries series;
+  series.push(0, 0);
+  bool res = series.compact();
   TEST_ASSERT_FALSE(res);
-  TEST_ASSERT_EQUAL_INT16_MESSAGE(1, stats.data.size(), "stats.data.size()");
+  TEST_ASSERT_EQUAL_INT16_MESSAGE(1, series.data.size(), "series.data.size()");
 }
 
 void test_function_statistics_compact_huge(void)
 {
   try
   {
-    Timeseries stats(5000);
+    Timeseries series(5000);
     for (uint32_t x = 1; x <= 100000; x++)
     {
-      stats.update(x-1, 1);
+      series.push(x - 1, 1);
       if (!(x % 100))
-        stats.compact();
+        series.compact();
     }
-    TEST_ASSERT_EQUAL_INT16_MESSAGE(2, stats.data.size(), "stats.data.size()");
+    TEST_ASSERT_EQUAL_INT16_MESSAGE(2, series.data.size(), "series.data.size()");
 
-    TEST_ASSERT_EQUAL_INT32(0, stats.data.front().first);
-    TEST_ASSERT_EQUAL_FLOAT(1., stats.data.front().second);
-    TEST_ASSERT_EQUAL_INT32(99999, stats.data.back().first);
-    TEST_ASSERT_EQUAL_FLOAT(1., stats.data.back().second);
+    TEST_ASSERT_EQUAL_INT32(0, series.data.front().first);
+    TEST_ASSERT_EQUAL_FLOAT(1., series.data.front().second);
+    TEST_ASSERT_EQUAL_INT32(99999, series.data.back().first);
+    TEST_ASSERT_EQUAL_FLOAT(1., series.data.back().second);
   }
   catch (const std::exception &e)
   {
@@ -246,6 +246,26 @@ void test_function_statistics_compact_huge(void)
     printf("Error in Statistics::update(): %s\n", e.what());
 #endif
   }
+}
+
+void test_function_statistics_purge_simple(void)
+{
+  Timeseries series;
+  series.push(0, 0);
+  series.push(1, 1);
+  series.push(2, 2);
+  series.push(3, 3);
+  series.push(4, 4);
+  series.push(5, 5);
+
+  TEST_ASSERT_EQUAL_UINT32(6, series.size());
+  uint32_t removed = series.purge(6, 4);
+  TEST_ASSERT_EQUAL_UINT32_MESSAGE(2, removed, "removed");
+  TEST_ASSERT_EQUAL_UINT32_MESSAGE(4, series.size(), "size()");
+  TEST_ASSERT_EQUAL_INT32(2, series.data.at(0).first);
+  TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).second);
+  TEST_ASSERT_EQUAL_INT32(5, series.data.at(3).first);
+  TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(3).second);
 }
 
 void process(void)
@@ -262,6 +282,7 @@ void process(void)
   RUN_TEST(test_function_statistics_compact_math);
   RUN_TEST(test_function_statistics_compact_throw);
   RUN_TEST(test_function_statistics_compact_huge);
+  RUN_TEST(test_function_statistics_purge_simple);
   UNITY_END();
 }
 

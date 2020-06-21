@@ -7,7 +7,7 @@ Timeseries::Timeseries(uint32_t maxLength)
   maxHistoryLength = maxLength;
 }
 
-bool Timeseries::update(uint32_t timestamp, float value)
+bool Timeseries::push(uint32_t timestamp, float value)
 {
   bool updateStats = false;
   min = value < min ? value : min;
@@ -25,9 +25,9 @@ bool Timeseries::update(uint32_t timestamp, float value)
   catch (const exception &e)
   {
 #ifdef ARDUINO
-    Serial.printf("[ ERROR ] Statistics::update(): %s\n", e.what());
+    Serial.printf("[ ERROR ] Statistics::push(): %s\n", e.what());
 #else
-    printf("Error in Statistics::update(): %s\n", e.what());
+    printf("Error in Statistics::push(): %s\n", e.what());
 #endif
     return false;
   }
@@ -36,7 +36,7 @@ bool Timeseries::update(uint32_t timestamp, float value)
   {
     min = 1e12;
     max = -1e12;
-    float val=0;
+    float val = 0;
     for (PointIterator i = data.begin(); i != data.end(); ++i)
     {
       val = float(Point(*i).second);
@@ -153,20 +153,44 @@ void Timeseries::ramerDouglasPeucker(const vector<Point> &pointList, float epsil
 bool Timeseries::compact(float epsilon)
 {
   vector<Point> pointListOut;
-  try
+
+  if (data.size())
   {
-    ramerDouglasPeucker(data, epsilon, pointListOut);
-    data.assign(pointListOut.begin(), pointListOut.end());
-    data.shrink_to_fit();
-  }
-  catch (const std::exception &e)
-  {
+    try
+    {
+      ramerDouglasPeucker(data, epsilon, pointListOut);
+      data.assign(pointListOut.begin(), pointListOut.end());
+      data.shrink_to_fit();
+    }
+    catch (const std::exception &e)
+    {
 #ifdef ARDUINO
-    Serial.printf("[ ERROR ] Statistics::compact(%f): %s\n", epsilon, e.what());
+      Serial.printf("[ ERROR ] Statistics::compact(%f): %s\n", epsilon, e.what());
 #else
-    printf("Error in Statistics::compact(%f): %s\n", epsilon, e.what());
+      printf("Error in Statistics::compact(%f): %s\n", epsilon, e.what());
 #endif
-    return false;
+      return false;
+    }
   }
   return true;
+}
+
+/**
+ * Checks the timestamps and drops all entries that are older that given by maxAgeSeconds  
+ */
+uint32_t Timeseries::purge(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds)
+{
+  uint32_t removedEntries = 0;
+  if (data.size())
+  {
+    for (PointIterator i = data.begin(); i != data.end(); ++i)
+    {
+      if (Point(*i).first < (currentTimeSeconds-maxAgeSeconds))
+      {
+        data.erase(i);
+        removedEntries++;
+      }
+    }
+  }
+  return removedEntries;
 }
