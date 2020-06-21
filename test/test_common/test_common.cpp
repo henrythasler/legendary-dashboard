@@ -250,7 +250,7 @@ void test_function_statistics_compact_huge(void)
 
 void test_function_statistics_purge_simple(void)
 {
-  Timeseries series;
+  Timeseries series(10);
   series.push(0, 0);
   series.push(1, 1);
   series.push(2, 2);
@@ -259,9 +259,10 @@ void test_function_statistics_purge_simple(void)
   series.push(5, 5);
 
   TEST_ASSERT_EQUAL_UINT32(6, series.size());
-  uint32_t removed = series.purge(6, 4);
+  uint32_t removed = series.trim(6, 4);
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(2, removed, "removed");
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(4, series.size(), "size()");
+  TEST_ASSERT_EQUAL_UINT32_MESSAGE(8, series.capacity(), "capacity()");
   TEST_ASSERT_EQUAL_INT32(2, series.data.at(0).first);
   TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).second);
   TEST_ASSERT_EQUAL_INT32(5, series.data.at(3).first);

@@ -70,6 +70,11 @@ uint32_t Timeseries::size()
   return data.size();
 }
 
+uint32_t Timeseries::capacity()
+{
+  return data.capacity();
+}
+
 // from: https://rosettacode.org/wiki/Ramer-Douglas-Peucker_line_simplification#C.2B.2B
 float Timeseries::perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd)
 {
@@ -178,19 +183,18 @@ bool Timeseries::compact(float epsilon)
 /**
  * Checks the timestamps and drops all entries that are older that given by maxAgeSeconds  
  */
-uint32_t Timeseries::purge(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds)
+uint32_t Timeseries::trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds)
 {
   uint32_t removedEntries = 0;
   if (data.size())
   {
-    for (PointIterator i = data.begin(); i != data.end(); ++i)
+    PointIterator i = data.begin();
+    while (Point(*i).first < (currentTimeSeconds - maxAgeSeconds))
     {
-      if (Point(*i).first < (currentTimeSeconds-maxAgeSeconds))
-      {
-        data.erase(i);
-        removedEntries++;
-      }
+      i++;
     }
+    removedEntries = i - data.begin();
+    data.erase(data.begin(), i);
   }
   return removedEntries;
 }

@@ -317,6 +317,10 @@ void loop()
   {
     if (counter1h > 0) // don't compact on startup
     {
+      tempStats.trim(uptime.getSeconds(), 7200);
+      humStats.trim(uptime.getSeconds(), 7200);
+      pressStats.trim(uptime.getSeconds(), 7200);
+
       tempStats.compact(0.2);
       humStats.compact(0.2);
       pressStats.compact(0.2);
