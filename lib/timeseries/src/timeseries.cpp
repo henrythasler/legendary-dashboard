@@ -21,6 +21,20 @@ bool Timeseries::push(uint32_t timestamp, float value)
       data.erase(data.begin());
     }
     data.push_back(Point(timestamp, value));
+
+    if (updateStats)
+    {
+      min = 1e12;
+      max = -1e12;
+      float val = 0;
+      for (PointIterator i = data.begin(); i != data.end(); ++i)
+      {
+        val = float(Point(*i).second);
+        min = val < min ? val : min;
+        max = val > max ? val : max;
+      }
+    }
+    id++;
   }
   catch (const exception &e)
   {
@@ -32,20 +46,6 @@ bool Timeseries::push(uint32_t timestamp, float value)
     return false;
   }
 
-  if (updateStats)
-  {
-    min = 1e12;
-    max = -1e12;
-    float val = 0;
-    for (PointIterator i = data.begin(); i != data.end(); ++i)
-    {
-      val = float(Point(*i).second);
-      min = val < min ? val : min;
-      max = val > max ? val : max;
-    }
-  }
-
-  id++;
   return true;
 }
 
@@ -170,9 +170,9 @@ bool Timeseries::compact(float epsilon)
     catch (const std::exception &e)
     {
 #ifdef ARDUINO
-      Serial.printf("[ ERROR ] Statistics::compact(%f): %s\n", epsilon, e.what());
+      Serial.printf("[ ERROR ] Timeseries::compact(%f): %s\n", epsilon, e.what());
 #else
-      printf("Error in Statistics::compact(%f): %s\n", epsilon, e.what());
+      printf("Error in Timeseries::compact(%f): %s\n", epsilon, e.what());
 #endif
       return false;
     }
@@ -186,15 +186,27 @@ bool Timeseries::compact(float epsilon)
 uint32_t Timeseries::trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds)
 {
   uint32_t removedEntries = 0;
-  if (data.size())
+  try
   {
-    PointIterator i = data.begin();
-    while (Point(*i).first < (currentTimeSeconds - maxAgeSeconds))
+    if (data.size())
     {
-      i++;
+      PointIterator i = data.begin();
+      while (Point(*i).first + maxAgeSeconds < currentTimeSeconds)
+      {
+        i++;
+      }
+      removedEntries = i - data.begin();
+      data.erase(data.begin(), i);
     }
-    removedEntries = i - data.begin();
-    data.erase(data.begin(), i);
   }
+  catch (const std::exception &e)
+  {
+#ifdef ARDUINO
+    Serial.printf("[ ERROR ] Timeseries::trim(%u, %u): %s\n", currentTimeSeconds, maxAgeSeconds, e.what());
+#else
+    printf("[ ERROR ] Timeseries::trim(%u, %u): %s\n", currentTimeSeconds, maxAgeSeconds, e.what());
+#endif
+  }
+
   return removedEntries;
 }

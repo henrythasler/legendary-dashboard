@@ -248,7 +248,7 @@ void test_function_statistics_compact_huge(void)
   }
 }
 
-void test_function_statistics_purge_simple(void)
+void test_function_statistics_trim_simple(void)
 {
   Timeseries series(10);
   series.push(0, 0);
@@ -269,6 +269,50 @@ void test_function_statistics_purge_simple(void)
   TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(3).second);
 }
 
+void test_function_statistics_trim_none(void)
+{
+  Timeseries series(10);
+  series.push(0, 0);
+  series.push(1, 1);
+  series.push(2, 2);
+  series.push(3, 3);
+  series.push(4, 4);
+  series.push(5, 5);
+
+  TEST_ASSERT_EQUAL_UINT32(6, series.size());
+  TEST_ASSERT_EQUAL_UINT32_MESSAGE(8, series.capacity(), "capacity() before");
+  uint32_t removed = series.trim(6, 10);
+  TEST_ASSERT_EQUAL_UINT32_MESSAGE(0, removed, "removed");
+  TEST_ASSERT_EQUAL_UINT32_MESSAGE(6, series.size(), "size()");
+  TEST_ASSERT_EQUAL_UINT32_MESSAGE(8, series.capacity(), "capacity() after trim()");
+  TEST_ASSERT_EQUAL_INT32(0, series.data.at(0).first);
+  TEST_ASSERT_EQUAL_FLOAT(0., series.data.at(0).second);
+  TEST_ASSERT_EQUAL_INT32(5, series.data.at(5).first);
+  TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(5).second);
+}
+
+void test_function_statistics_trim_compact_simple(void)
+{
+  Timeseries series(10);
+  series.push(0, 0);
+  series.push(1, 1);
+  series.push(2, 2);
+  series.push(3, 3);
+  series.push(4, 4);
+  series.push(5, 5);
+
+  TEST_ASSERT_EQUAL_UINT32(6, series.size());
+  uint32_t removed = series.trim(6, 4);
+  TEST_ASSERT_EQUAL_UINT32_MESSAGE(2, removed, "removed");
+  bool compactResult = series.compact();
+  TEST_ASSERT_EQUAL_UINT32_MESSAGE(2, series.size(), "size()");
+  TEST_ASSERT_EQUAL_UINT32_MESSAGE(2, series.capacity(), "capacity()");
+  TEST_ASSERT_EQUAL_INT32(2, series.data.at(0).first);
+  TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).second);
+  TEST_ASSERT_EQUAL_INT32(5, series.data.at(1).first);
+  TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(1).second);
+}
+
 void process(void)
 {
   UNITY_BEGIN();
@@ -283,7 +327,9 @@ void process(void)
   RUN_TEST(test_function_statistics_compact_math);
   RUN_TEST(test_function_statistics_compact_throw);
   RUN_TEST(test_function_statistics_compact_huge);
-  RUN_TEST(test_function_statistics_purge_simple);
+  RUN_TEST(test_function_statistics_trim_simple);
+  RUN_TEST(test_function_statistics_trim_none);
+  RUN_TEST(test_function_statistics_trim_compact_simple);
   UNITY_END();
 }
 

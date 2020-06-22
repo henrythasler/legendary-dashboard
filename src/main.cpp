@@ -303,12 +303,14 @@ void loop()
   // e-Paper Display MUST not be updated more often than every 180s to ensure lifetime function
   if (!(counterBase % (300000L / SCHEDULER_MAIN_LOOP_MS)))
   {
-    if (counter300s > 0) // don't compact on startup
+    if (counter300s > 0) // don't trim/compact on startup
     {
-      tempStats.trim(uptime.getSeconds(), 8 * 3600);
-      humStats.trim(uptime.getSeconds(), 8 * 3600);
-      pressStats.trim(uptime.getSeconds(), 8 * 3600);
+      // RAM is limited so we cut off the timeseries after x days
+      tempStats.trim(uptime.getSeconds(), 7 * 24 * 3600);
+      humStats.trim(uptime.getSeconds(), 7 * 24 * 3600);
+      pressStats.trim(uptime.getSeconds(), 7 * 24 * 3600);
 
+      // and apply compression (Ramer-Douglas-Peucker)
       tempStats.compact(0.05);
       humStats.compact(0.2);
       pressStats.compact(0.1);
@@ -316,8 +318,9 @@ void loop()
 
     if (enableDisplay)
     {
-      Serial.println("[  DISP  ] Updating...");
+      Serial.print("[  DISP  ] Updating... ");
       updateScreen();
+      Serial.println("ok");
     }
 
     counter300s++;
