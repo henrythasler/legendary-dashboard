@@ -34,8 +34,8 @@ public:
   uint32_t size();
   uint32_t capacity();
   float mean();
-  bool compact(float epsilon = .2);
-  uint32_t trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds = 604800);
+  int32_t compact(float epsilon = .2);
+  int32_t trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds = 604800);
 
   float perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd);
   void ramerDouglasPeucker(const vector<Point> &pointList, float epsilon, vector<Point> &out);

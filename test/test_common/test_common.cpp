@@ -3,6 +3,7 @@
 
 #ifndef ARDUINO
 #include <stdio.h>
+#include <chrono>
 #endif
 
 void test_function_statistics_initial(void)
@@ -67,17 +68,6 @@ void test_function_statistics_huge(void)
   for (int i = 0; i < 50000; i++)
   {
     series.push(i, i % 100);
-    // #ifdef ARDUINO
-    //         if (!(i % 100))
-    //             Serial.printf("%u: Object %u KiB of %u KiB   Heap: %u KiB (%uKiB free);  maxAlloc: %u KiB;   MinFreeHeap: %u KiB\n",
-    //             i,
-    //             (sizeof(series.data) + sizeof(Point) * series.data.capacity())/1024,
-    //             series.data.max_size() / 1024,
-    //             ESP.getHeapSize()/1024,
-    //             ESP.getFreeHeap() / 1024,
-    //             ESP.getMaxAllocHeap()/1024,
-    //             ESP.getMinFreeHeap()/1024);
-    // #endif
   }
   TEST_ASSERT_EQUAL_FLOAT(0., series.min);
   TEST_ASSERT_EQUAL_FLOAT(99., series.max);
@@ -107,7 +97,7 @@ void test_function_statistics_rdp_synth1(void)
 
   series.ramerDouglasPeucker(examplePoint, 1.0, pointListOut);
 
-  TEST_ASSERT_EQUAL_INT16_MESSAGE(2, pointListOut.size(), "pointListOut.size()");
+  TEST_ASSERT_EQUAL_INT32_MESSAGE(2, pointListOut.size(), "pointListOut.size()");
 
   TEST_ASSERT_EQUAL_INT32(1, pointListOut.at(0).first);
   TEST_ASSERT_EQUAL_FLOAT(1., pointListOut.at(0).second);
@@ -131,7 +121,7 @@ void test_function_statistics_rdp_synth2(void)
 
   series.ramerDouglasPeucker(examplePoint, 1.0, pointListOut);
 
-  TEST_ASSERT_EQUAL_INT16_MESSAGE(3, pointListOut.size(), "pointListOut.size()");
+  TEST_ASSERT_EQUAL_INT32_MESSAGE(3, pointListOut.size(), "pointListOut.size()");
 
   TEST_ASSERT_EQUAL_INT32(5, pointListOut.at(0).first);
   TEST_ASSERT_EQUAL_FLOAT(0., pointListOut.at(0).second);
@@ -171,14 +161,9 @@ void test_function_statistics_rdp_math(void)
 
   snprintf(message, 64, "sizePoint=%u vs. sizeFlat=%u vs. pointAfterRDP=%u", sizePoint, sizeFlat, sizePointPack);
   TEST_MESSAGE(message);
-  // for (vector<Point>::const_iterator i = pointListOut.begin(); i != pointListOut.end(); ++i)
-  // {
-  //     snprintf(message, 64, "%.2f, %.2f", float(Point(*i).first), float(Point(*i).second));
-  //     TEST_MESSAGE(message);
-  // }
 #endif
 
-  TEST_ASSERT_EQUAL_INT16_MESSAGE(39, pointListOut.size(), "pointListOut.size()");
+  TEST_ASSERT_EQUAL_INT32_MESSAGE(39, pointListOut.size(), "pointListOut.size()");
 }
 
 void test_function_statistics_compact_math(void)
@@ -194,30 +179,27 @@ void test_function_statistics_compact_math(void)
 #ifndef ARDUINO
   int before = sizeof(series.data) + sizeof(Point) * series.data.capacity();
 #endif
-  series.compact(0.2);
+
+  int32_t removed = series.compact(0.2);
+  TEST_ASSERT_EQUAL_INT32(42, removed);
 
 #ifndef ARDUINO
   int after = sizeof(series.data) + sizeof(Point) * series.data.capacity();
   char message[64];
-  // for (vector<Point>::const_iterator i = series.data.begin(); i != series.data.end(); ++i)
-  // {
-  //     snprintf(message, 64, "%.2f, %.2f", float(Point(*i).first), float(Point(*i).second));
-  //     TEST_MESSAGE(message);
-  // }
   snprintf(message, 64, "before=%u vs. after=%u", before, after);
   TEST_MESSAGE(message);
 #endif
 
-  TEST_ASSERT_EQUAL_INT16_MESSAGE(39, series.data.size(), "series.data.size()");
+  TEST_ASSERT_EQUAL_INT32_MESSAGE(39, series.data.size(), "series.data.size()");
 }
 
 void test_function_statistics_compact_throw(void)
 {
   Timeseries series;
   series.push(0, 0);
-  bool res = series.compact();
-  TEST_ASSERT_FALSE(res);
-  TEST_ASSERT_EQUAL_INT16_MESSAGE(1, series.data.size(), "series.data.size()");
+  int32_t removed = series.compact();
+  TEST_ASSERT_EQUAL_INT32(-1, removed);
+  TEST_ASSERT_EQUAL_INT32_MESSAGE(1, series.data.size(), "series.data.size()");
 }
 
 void test_function_statistics_compact_huge(void)
@@ -231,7 +213,7 @@ void test_function_statistics_compact_huge(void)
       if (!(x % 100))
         series.compact();
     }
-    TEST_ASSERT_EQUAL_INT16_MESSAGE(2, series.data.size(), "series.data.size()");
+    TEST_ASSERT_EQUAL_INT32_MESSAGE(2, series.data.size(), "series.data.size()");
 
     TEST_ASSERT_EQUAL_INT32(0, series.data.front().first);
     TEST_ASSERT_EQUAL_FLOAT(1., series.data.front().second);
@@ -360,7 +342,11 @@ void loop()
 
 int main(int argc, char **argv)
 {
+  auto start = std::chrono::high_resolution_clock::now();
   process();
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start); 
+  printf("Elapsed time: %lums\n", duration.count()/1000);
   return 0;
 }
 #endif

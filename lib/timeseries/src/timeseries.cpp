@@ -155,8 +155,9 @@ void Timeseries::ramerDouglasPeucker(const vector<Point> &pointList, float epsil
 * This will apply the Ramer-Douglas-Peucker algorithm to the dataset stored in the data-vector.
 * @param epsilon Larger values will result in fewer data points
 */
-bool Timeseries::compact(float epsilon)
+int32_t Timeseries::compact(float epsilon)
 {
+  int32_t removedEntries = 0;
   vector<Point> pointListOut;
 
   if (data.size())
@@ -164,6 +165,7 @@ bool Timeseries::compact(float epsilon)
     try
     {
       ramerDouglasPeucker(data, epsilon, pointListOut);
+      removedEntries = data.size() - pointListOut.size();
       data.assign(pointListOut.begin(), pointListOut.end());
       data.shrink_to_fit();
     }
@@ -174,18 +176,18 @@ bool Timeseries::compact(float epsilon)
 #else
       printf("Error in Timeseries::compact(%f): %s\n", epsilon, e.what());
 #endif
-      return false;
+      removedEntries = -1;
     }
   }
-  return true;
+  return removedEntries;
 }
 
 /**
  * Checks the timestamps and drops all entries that are older that given by maxAgeSeconds  
  */
-uint32_t Timeseries::trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds)
+int32_t Timeseries::trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds)
 {
-  uint32_t removedEntries = 0;
+  int32_t removedEntries = 0;
   try
   {
     if (data.size())
@@ -203,6 +205,7 @@ uint32_t Timeseries::trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds)
   {
 #ifdef ARDUINO
     Serial.printf("[ ERROR ] Timeseries::trim(%u, %u): %s\n", currentTimeSeconds, maxAgeSeconds, e.what());
+    removedEntries = -1;
 #else
     printf("[ ERROR ] Timeseries::trim(%u, %u): %s\n", currentTimeSeconds, maxAgeSeconds, e.what());
 #endif
