@@ -31,10 +31,8 @@ bool environmentSensorAvailable = false;
 
 // SIM800L includes, defines and variables
 #define SerialAT  Serial1
-#define SMS_TARGET  "+491708939980"
 // const char simPIN[]   = "1234"; // SIM card PIN code, if any
 TinyGsm modem(SerialAT);
-bool modemAvailable = false;
 
 // Display stuff
 #include <GxEPD.h>
@@ -98,22 +96,22 @@ bool enableDisplay = true; // display output can be disabled for testing purpose
  ******************************************************/
 void updateModemInfo(void)
 {
-  if (modemAvailable)
-  {
     // read current data
     currentSignalStrength = modem.getSignalQuality();
     Serial.print("[ MODEM  ] Sigal Quality [0-31]: ");
     Serial.println(currentSignalStrength);
 
+  if (modem.isNetworkConnected())
+  {
     modem.getNetworkTime(&currentYear, &currentMonth, &currentDay, &currentHour, &currentMin, &currentSec, &currentTimezone);
     Serial.printf("[ MODEM  ] Current Network Time (Values) - Year: %d, Month: %02d, Day: %02d, Hour: %02d, Minute: %02d, Second: %02d, Timezone: %.1f\n",
         currentYear, currentMonth, currentDay, currentHour, currentMin, currentSec, currentTimezone);
-  
   }
   else
   {
-    Serial.println("[  WARN  ] modem not available.");
+    Serial.println("[  WARN  ] Network not connected.");
   }
+
 }
 
 /**
@@ -162,13 +160,19 @@ void updateScreen()
   display.setFont(&FreeSansBold18pt7b);
   display.setTextColor(GxEPD_RED);
   display.setCursor(160, 45);
-  display.printf("%02d.%02d.%04d", currentDay, currentMonth, currentYear);
+  if (currentYear == 0)
+    display.printf("--.--.----");
+  else
+    display.printf("%02d.%02d.%04d", currentDay, currentMonth, currentYear);
 
   // Udate Time
   display.setFont(&FreeSansBold9pt7b);
   display.setTextColor(GxEPD_BLACK);
   display.setCursor(160, 65);
-  display.printf("Last updated: %02d:%02d:%02d", currentHour, currentMin, currentSec);
+  if (currentYear == 0)
+    display.printf("Last updated: --:--:--");
+  else
+    display.printf("Last updated: %02d:%02d:%02d", currentHour, currentMin, currentSec);
   
   // Signal strength
   display.setFont(&FreeSansBold9pt7b);
@@ -318,7 +322,6 @@ void setup()
   // Set GSM module baud rate and UART pins
   Serial.println("[  INIT  ] Initializing serial interface to modem...");
   SerialAT.begin(115200, SERIAL_8N1, MODEM_RX, MODEM_TX);
-  delay(3000);
   initStage++;
 
   // Restart takes quite some time
@@ -339,24 +342,13 @@ void setup()
   //   Serial.println("Unlocking SIM...");
   //   modem.simUnlock(simPIN);
   // }
-
-  Serial.print("[  INIT  ] Waiting for network...");
-  if (!modem.waitForNetwork(240000L)) {
-    Serial.println(" fail");
-    Serial.println("[ ERROR ] - Could not connect to mobile network, check antenna!");
-    modemAvailable = false;
-  }
-  else {
-    Serial.println(" OK");
-    modemAvailable = true;
-  }
-
-  // Network time is not set properly if requested too early after network connection
-  delay(4000);
   
   initStage++; // Init complete
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
+
+  // delay to allow modem connect to network
+  delay(4000);
 }
 
 /**
@@ -397,7 +389,7 @@ void loop()
                   sizeof(humStats.data) + sizeof(Point) * humStats.data.capacity(),
                   pressStats.size(),
                   sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity(),
-                  uptime.getSeconds());
+                  uptime.getSeconds());  
   }
 
   // 300s Tasks
