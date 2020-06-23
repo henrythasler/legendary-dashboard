@@ -81,6 +81,12 @@ $ platformio remote agent start 2>&1 >/dev/null &
  - [LilyGo T-Call SIM800L](https://github.com/Xinyuan-LilyGO/LilyGo-T-Call-SIM800L)
  - [Pinout - LilyGo T-Call SIM800L](https://raw.githubusercontent.com/Xinyuan-LilyGO/LilyGo-T-Call-SIM800L/master/image/SIM800L_IP.jpg)
  - [ESP32 Publish Data to Cloud without Wi-Fi](https://randomnerdtutorials.com/esp32-sim800l-publish-data-to-cloud/)
+ 
+### Modem, GSM, Mobile Network
+
+- [Using SIM7020E to Connect to 1NCE NB-IoT Network](https://www.hackster.io/hhf/using-sim7020e-to-connect-to-1nce-nb-iot-network-bfd41a)
+- [Sim800L time not updating to network time](https://stackoverflow.com/questions/55023587/sim800l-time-not-updating-to-network-time)
+- [SIM800L Modul Uhrzeit abfragen](https://www.mikrocontroller.net/topic/465585)
 
 ### BME280 Environmental sensor
 
