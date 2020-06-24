@@ -407,7 +407,7 @@ void loop()
       // and apply compression (Ramer-Douglas-Peucker)
       tempStats.compact(0.05);
       humStats.compact(0.2);
-      pressStats.compact(0.1);
+      pressStats.compact(0.02);
     }
 
     // update modem Information every time display is updated, to get current timestamp

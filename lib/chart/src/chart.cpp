@@ -30,7 +30,7 @@ void Chart::lineChart(GxEPD_Class *display,
         float pixelPerTime = float(canvasWidth) / max(float(tMax - tMin), float(1.));
         float pixelPerValue = float(canvasHeight) / (dataMax - dataMin + 0.01);
 
-        Serial.printf("[  CHART ] tMin=%u tMax=%u pixelPerTime=%f pixelPerValue=%f\n", tMin, tMax, pixelPerTime, pixelPerValue);
+        // Serial.printf("[  CHART ] tMin=%u tMax=%u pixelPerTime=%f pixelPerValue=%f\n", tMin, tMax, pixelPerTime, pixelPerValue);
 
         uint16_t screenX1 = 0, screenY1 = 0, screenX2 = 0, screenY2 = 0;
 
