@@ -303,6 +303,7 @@ void setup()
   delay(100); // wait a bit, before display-class starts writing to serial out
 
   display.init(/*115200*/); // uncomment serial speed definition for debug output
+  io.setFrequency(500000L); // set to 500kHz; the default 4MHz-setting is unreliable with active modem and unshielded wiring
   display.setTextColor(GxEPD_BLACK);
   display.setFont(&FreeMonoBold18pt7b);
   display.fillScreen(GxEPD_WHITE);
