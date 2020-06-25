@@ -7,7 +7,7 @@ Timeseries::Timeseries(uint32_t maxLength)
   maxHistoryLength = maxLength;
 }
 
-bool Timeseries::update(uint32_t timestamp, float value)
+bool Timeseries::push(uint32_t timestamp, float value)
 {
   bool updateStats = false;
   min = value < min ? value : min;
@@ -21,31 +21,31 @@ bool Timeseries::update(uint32_t timestamp, float value)
       data.erase(data.begin());
     }
     data.push_back(Point(timestamp, value));
+
+    if (updateStats)
+    {
+      min = 1e12;
+      max = -1e12;
+      float val = 0;
+      for (PointIterator i = data.begin(); i != data.end(); ++i)
+      {
+        val = float(Point(*i).second);
+        min = val < min ? val : min;
+        max = val > max ? val : max;
+      }
+    }
+    id++;
   }
   catch (const exception &e)
   {
 #ifdef ARDUINO
-    Serial.printf("[ ERROR ] Statistics::update(): %s\n", e.what());
+    Serial.printf("[ ERROR ] Statistics::push(): %s\n", e.what());
 #else
-    printf("Error in Statistics::update(): %s\n", e.what());
+    printf("Error in Statistics::push(): %s\n", e.what());
 #endif
     return false;
   }
 
-  if (updateStats)
-  {
-    min = 1e12;
-    max = -1e12;
-    float val=0;
-    for (PointIterator i = data.begin(); i != data.end(); ++i)
-    {
-      val = float(Point(*i).second);
-      min = val < min ? val : min;
-      max = val > max ? val : max;
-    }
-  }
-
-  id++;
   return true;
 }
 
@@ -68,6 +68,11 @@ float Timeseries::mean()
 uint32_t Timeseries::size()
 {
   return data.size();
+}
+
+uint32_t Timeseries::capacity()
+{
+  return data.capacity();
 }
 
 // from: https://rosettacode.org/wiki/Ramer-Douglas-Peucker_line_simplification#C.2B.2B
@@ -150,23 +155,61 @@ void Timeseries::ramerDouglasPeucker(const vector<Point> &pointList, float epsil
 * This will apply the Ramer-Douglas-Peucker algorithm to the dataset stored in the data-vector.
 * @param epsilon Larger values will result in fewer data points
 */
-bool Timeseries::compact(float epsilon)
+int32_t Timeseries::compact(float epsilon)
 {
+  int32_t removedEntries = 0;
   vector<Point> pointListOut;
+
+  if (data.size())
+  {
+    try
+    {
+      ramerDouglasPeucker(data, epsilon, pointListOut);
+      removedEntries = data.size() - pointListOut.size();
+      data.assign(pointListOut.begin(), pointListOut.end());
+      data.shrink_to_fit();
+    }
+    catch (const std::exception &e)
+    {
+#ifdef ARDUINO
+      Serial.printf("[ ERROR ] Timeseries::compact(%f): %s\n", epsilon, e.what());
+#else
+      printf("Error in Timeseries::compact(%f): %s\n", epsilon, e.what());
+#endif
+      removedEntries = -1;
+    }
+  }
+  return removedEntries;
+}
+
+/**
+ * Checks the timestamps and drops all entries that are older that given by maxAgeSeconds  
+ */
+int32_t Timeseries::trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds)
+{
+  int32_t removedEntries = 0;
   try
   {
-    ramerDouglasPeucker(data, epsilon, pointListOut);
-    data.assign(pointListOut.begin(), pointListOut.end());
-    data.shrink_to_fit();
+    if (data.size())
+    {
+      PointIterator i = data.begin();
+      while (Point(*i).first + maxAgeSeconds < currentTimeSeconds)
+      {
+        i++;
+      }
+      removedEntries = i - data.begin();
+      data.erase(data.begin(), i);
+    }
   }
   catch (const std::exception &e)
   {
 #ifdef ARDUINO
-    Serial.printf("[ ERROR ] Statistics::compact(%f): %s\n", epsilon, e.what());
+    Serial.printf("[ ERROR ] Timeseries::trim(%u, %u): %s\n", currentTimeSeconds, maxAgeSeconds, e.what());
+    removedEntries = -1;
 #else
-    printf("Error in Statistics::compact(%f): %s\n", epsilon, e.what());
+    printf("[ ERROR ] Timeseries::trim(%u, %u): %s\n", currentTimeSeconds, maxAgeSeconds, e.what());
 #endif
-    return false;
   }
-  return true;
+
+  return removedEntries;
 }

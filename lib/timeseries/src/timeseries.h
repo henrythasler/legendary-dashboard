@@ -5,6 +5,7 @@
 #include <vector>
 #include <cmath>
 #include <stdexcept>
+#include <sys/time.h>
 
 #ifdef ARDUINO
 #include <Arduino.h>
@@ -29,10 +30,12 @@ public:
 
   Timeseries(uint32_t maxLength = 32);
 
-  bool update(uint32_t timestamp, float value);
+  bool push(uint32_t timestamp, float value);
   uint32_t size();
+  uint32_t capacity();
   float mean();
-  bool compact(float epsilon = .2);
+  int32_t compact(float epsilon = .2);
+  int32_t trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds = 604800);
 
   float perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd);
   void ramerDouglasPeucker(const vector<Point> &pointList, float epsilon, vector<Point> &out);

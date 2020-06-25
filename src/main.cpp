@@ -129,9 +129,9 @@ void doMeasurement(void)
 
     // update statistics for each measurement
     uint32_t timestamp = uptime.getSeconds();
-    tempStats.update(timestamp, currentTemperatureCelsius);
-    humStats.update(timestamp, currentHumidityPercent);
-    pressStats.update(timestamp, currentPressurePascal / 100.); // use hPa
+    tempStats.push(timestamp, currentTemperatureCelsius);
+    humStats.push(timestamp, currentHumidityPercent);
+    pressStats.push(timestamp, currentPressurePascal / 100.); // use hPa
   }
   else
   {
@@ -235,20 +235,20 @@ void updateScreen()
   display.printf("%.0f", humStats.min);
 
   display.setCursor(268, 155);
-  display.printf("%.0f", pressStats.max);
+  display.printf("%.1f", pressStats.max);
   display.setCursor(268, 249);
-  display.printf("%.0f", pressStats.min);
+  display.printf("%.1f", pressStats.min);
 
   // Frame
-  display.drawFastHLine(0,149,400, GxEPD_BLACK);
-  display.drawFastHLine(0,251,400, GxEPD_BLACK);
-  display.drawFastVLine(133,149,102, GxEPD_BLACK);
-  display.drawFastVLine(266,149,102, GxEPD_BLACK);
+  display.drawFastHLine(0, 149, 400, GxEPD_BLACK);
+  display.drawFastHLine(0, 251, 400, GxEPD_BLACK);
+  display.drawFastVLine(133, 149, 102, GxEPD_BLACK);
+  display.drawFastVLine(266, 149, 102, GxEPD_BLACK);
 
   // Charts
   chart.lineChart(&display, &tempStats, 0, 150, 130, 100, GxEPD_RED);
   chart.lineChart(&display, &humStats, 135, 150, 130, 100, GxEPD_BLACK);
-  chart.lineChart(&display, &pressStats, 270, 150, 130, 100, GxEPD_BLACK, false, true, true, 600, 1100);
+  chart.lineChart(&display, &pressStats, 270, 150, 130, 100, GxEPD_BLACK);
 
 
   display.update();
@@ -412,13 +412,27 @@ void loop()
   // e-Paper Display MUST not be updated more often than every 180s to ensure lifetime function
   if (!(counterBase % (300000L / SCHEDULER_MAIN_LOOP_MS)))
   {
+    if (counter300s > 0) // don't trim/compact on startup
+    {
+      // RAM is limited so we cut off the timeseries after x days
+      tempStats.trim(uptime.getSeconds(), 7 * 24 * 3600);
+      humStats.trim(uptime.getSeconds(), 7 * 24 * 3600);
+      pressStats.trim(uptime.getSeconds(), 7 * 24 * 3600);
+
+      // and apply compression (Ramer-Douglas-Peucker)
+      tempStats.compact(0.05);
+      humStats.compact(0.2);
+      pressStats.compact(0.02);
+    }
+
     // update modem Information every time display is updated, to get current timestamp
     updateModemInfo();
   
     if (enableDisplay)
     {
-      Serial.println("[  DISP  ] Updating...");
+      Serial.print("[  DISP  ] Updating... ");
       updateScreen();
+      Serial.println("ok");
     }
 
     counter300s++;
@@ -427,12 +441,6 @@ void loop()
   // 1h Tasks
   if (!(counterBase % (3600000L / SCHEDULER_MAIN_LOOP_MS)))
   {
-    if (counter1h > 0) // don't compact on startup
-    {
-      tempStats.compact(0.2);
-      humStats.compact(0.2);
-      pressStats.compact(0.2);
-    }
     counter1h++;
   }
 
