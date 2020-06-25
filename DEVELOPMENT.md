@@ -65,6 +65,22 @@ e-Paper Module | ESP32 | Color | Function | Note
 `RST`  | `GPIO 0` | white |  External reset pin | Low for reset
 `BUSY`  | `GPIO 2` | purple |  Busy state output pin | Low for busy
 
+## GxEPD E-Paper display library
+
+The [GxEPD E-Paper display library](https://github.com/ZinggJM/GxEPD) has some difficulties updating the screen due to the timing used in the wakeup-routine:
+
+```
+  if (_rst >= 0)
+  {
+    digitalWrite(_rst, 0);
+    delay(10);
+    digitalWrite(_rst, 1);
+    delay(10);
+  }
+```
+
+The low-pulse with 10ms is too short to wake up the display from sleep-mode. Increasing the gap duration to 100ms (`delay(100);`) has solved the issue for me.
+
 ## Streaming display-content via webcam 
 
 Remote developers using [PIO Remote](https://docs.platformio.org/en/latest/plus/pio-remote.html) can be supported by using the Rasperry Pi camera to stream a video of the e-Paper display and the board itself (to check on LEDs) in their browser:
