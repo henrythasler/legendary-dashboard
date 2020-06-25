@@ -257,7 +257,7 @@ void setup()
                 ESP.getCpuFreqMHz(),
                 ESP.getFlashChipSize() / 1024,
                 ESP.getHeapSize() / 1024,
-                ESP.getEfuseMac(), // FIXME: 2888DEAE114C must be converted to 4c:11:ae:de:88:28
+                __builtin_bswap64(ESP.getEfuseMac()) >> 16, // swap endianess and rshift for better readability
                 ESP.getSdkVersion());
   initStage++;
 
