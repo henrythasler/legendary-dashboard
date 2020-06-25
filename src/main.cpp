@@ -140,6 +140,24 @@ void doMeasurement(void)
 }
 
 /**
+ * Draw bars to show signal strength of mobile network
+ * 
+ ******************************************************/
+void drawSignalStrength(int strength, int x, int y, int numbars, int barwidth, int barheight, int heightdelta, int gap)
+{
+  int i;
+
+  for (i=0; i<numbars; i++) {
+
+    if ( strength > (int) ((31 / (numbars + 1))) * (i+1) ) {
+      display.fillRect( x + i * (barwidth + gap), y + (numbars - 1- i) * heightdelta, barwidth, barheight - (numbars - 1 - i) * heightdelta, GxEPD_RED );
+    }
+
+    display.drawRect( x + i * (barwidth + gap), y + (numbars - 1- i) * heightdelta, barwidth, barheight - (numbars - 1 - i) * heightdelta, GxEPD_BLACK );
+  }
+}
+
+/**
  * Update the screen
  * 
  ******************************************************/
@@ -175,10 +193,7 @@ void updateScreen()
     display.printf("Last updated: %02d:%02d:%02d", currentHour, currentMin, currentSec);
   
   // Signal strength
-  display.setFont(&FreeSansBold9pt7b);
-  display.setTextColor(GxEPD_BLACK);
-  display.setCursor(160, 85);
-  display.printf("Signal strength: %2d of 31", currentSignalStrength);
+  drawSignalStrength( currentSignalStrength, 345, 10, 5, 7, 40, 5, 3);
 
   // Uptime and Memory stats
   display.setFont(&Org_01);
