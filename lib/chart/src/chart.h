@@ -28,6 +28,17 @@ public:
                    bool yAxisMaxAuto = true,
                    float yAxisMin = 0,
                    float yAxisMax = 100);
+    void signalBars(GxEPD_Class *display,
+                    int strength,
+                    int x,
+                    int y,
+                    int numbars,
+                    int barwidth,
+                    int barheight,
+                    int heightdelta,
+                    int gap,
+                    uint16_t strokeColor = 0,     // BLACK
+                    uint16_t fillColor = 0xFFFF); // WHITE
 #endif
 };
 #endif

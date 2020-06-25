@@ -30,8 +30,6 @@ void Chart::lineChart(GxEPD_Class *display,
         float pixelPerTime = float(canvasWidth) / max(float(tMax - tMin), float(1.));
         float pixelPerValue = float(canvasHeight) / (dataMax - dataMin + 0.01);
 
-        // Serial.printf("[  CHART ] tMin=%u tMax=%u pixelPerTime=%f pixelPerValue=%f\n", tMin, tMax, pixelPerTime, pixelPerValue);
-
         uint16_t screenX1 = 0, screenY1 = 0, screenX2 = 0, screenY2 = 0;
 
         float t1 = 0, y1 = 0, t2 = 0, y2 = 0;
@@ -52,11 +50,26 @@ void Chart::lineChart(GxEPD_Class *display,
             display->drawLine(screenX1, screenY1, screenX2, screenY2, lineColor);
             if (drawDataPoints)
                 display->fillCircle(screenX1, screenY1, 2, lineColor);
-            // Serial.printf("[  CHART ] t1=%.4f, y1=%.4f => (%u, %u)\n", t1, y1, screenX1, screenY1);
         }
     }
-
-    // for (int x = 0; x <= 80; x++)
-    //     display->drawPixel(x, 150 - cos((float(x) / 20.) * (float(x) / 20.) - 1) * 20, GxEPD_BLACK);
 }
+
+/**
+ * Draw bars to show signal strength of mobile network
+ * 
+ ******************************************************/
+void Chart::signalBars(GxEPD_Class *display, int strength, int x, int y, int numBars, int barWidth, int barHeight, int heightDelta, int gapWidth, uint16_t strokeColor, uint16_t fillColor)
+{
+    int i;
+
+    for (i = 0; i < numBars; i++)
+    {
+        if (strength > (int)((31 / (numBars + 1))) * (i + 1))
+        {
+            display->fillRect(x + i * (barWidth + gapWidth), y + (numBars - 1 - i) * heightDelta, barWidth, barHeight - (numBars - 1 - i) * heightDelta, fillColor);
+        }
+        display->drawRect(x + i * (barWidth + gapWidth), y + (numBars - 1 - i) * heightDelta, barWidth, barHeight - (numBars - 1 - i) * heightDelta, strokeColor);
+    }
+}
+
 #endif

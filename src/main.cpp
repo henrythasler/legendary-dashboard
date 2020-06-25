@@ -18,19 +18,19 @@ Adafruit_BME280 bme;         // use I2C
 bool environmentSensorAvailable = false;
 
 // Modem pinning
-#define MODEM_RST            (5)
-#define MODEM_PWKEY          (4)
-#define MODEM_POWER_ON       (23)
-#define MODEM_TX             (27)
-#define MODEM_RX             (26)
+#define MODEM_RST (5)
+#define MODEM_PWKEY (4)
+#define MODEM_POWER_ON (23)
+#define MODEM_TX (27)
+#define MODEM_RX (26)
 
 // Configure TinyGSM library
-#define TINY_GSM_MODEM_SIM800        // Modem is SIM800
-#define TINY_GSM_RX_BUFFER   (1024)  // Set RX buffer to 1Kb
+#define TINY_GSM_MODEM_SIM800     // Modem is SIM800
+#define TINY_GSM_RX_BUFFER (1024) // Set RX buffer to 1Kb
 #include <TinyGsmClient.h>
 
 // SIM800L includes, defines and variables
-#define SerialAT  Serial1
+#define SerialAT Serial1
 // const char simPIN[]   = "1234"; // SIM card PIN code, if any
 TinyGsm modem(SerialAT);
 
@@ -43,6 +43,9 @@ TinyGsm modem(SerialAT);
 // platformIO board definition: MOSI=15 SCK=14
 GxIO_Class io(SPI, /*CS*/ 19, /*DC*/ 18, /*RST*/ 0);
 GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
+#define BLACK (0x0000)
+#define WHITE (0xFFFF)
+#define COLOR (0xF800)
 #define HAS_RED_COLOR
 
 // FreeFonts from Adafruit_GFX
@@ -79,7 +82,6 @@ int currentMin = 0;
 int currentSec = 0;
 float currentTimezone = 0.0;
 
-
 // Track initialisation
 uint32_t initStage = 0;
 
@@ -96,22 +98,21 @@ bool enableDisplay = true; // display output can be disabled for testing purpose
  ******************************************************/
 void updateModemInfo(void)
 {
-    // read current data
-    currentSignalStrength = modem.getSignalQuality();
-    Serial.print("[ MODEM  ] Sigal Quality [0-31]: ");
-    Serial.println(currentSignalStrength);
+  // read current data
+  currentSignalStrength = modem.getSignalQuality();
+  Serial.print("[ MODEM  ] Sigal Quality [0-31]: ");
+  Serial.println(currentSignalStrength);
 
   if (modem.isNetworkConnected())
   {
     modem.getNetworkTime(&currentYear, &currentMonth, &currentDay, &currentHour, &currentMin, &currentSec, &currentTimezone);
     Serial.printf("[ MODEM  ] Current Network Time (Values) - Year: %d, Month: %02d, Day: %02d, Hour: %02d, Minute: %02d, Second: %02d, Timezone: %.1f\n",
-        currentYear, currentMonth, currentDay, currentHour, currentMin, currentSec, currentTimezone);
+                  currentYear, currentMonth, currentDay, currentHour, currentMin, currentSec, currentTimezone);
   }
   else
   {
     Serial.println("[  WARN  ] Network not connected.");
   }
-
 }
 
 /**
@@ -140,43 +141,25 @@ void doMeasurement(void)
 }
 
 /**
- * Draw bars to show signal strength of mobile network
- * 
- ******************************************************/
-void drawSignalStrength(int strength, int x, int y, int numbars, int barwidth, int barheight, int heightdelta, int gap)
-{
-  int i;
-
-  for (i=0; i<numbars; i++) {
-
-    if ( strength > (int) ((31 / (numbars + 1))) * (i+1) ) {
-      display.fillRect( x + i * (barwidth + gap), y + (numbars - 1- i) * heightdelta, barwidth, barheight - (numbars - 1 - i) * heightdelta, GxEPD_RED );
-    }
-
-    display.drawRect( x + i * (barwidth + gap), y + (numbars - 1- i) * heightdelta, barwidth, barheight - (numbars - 1 - i) * heightdelta, GxEPD_BLACK );
-  }
-}
-
-/**
  * Update the screen
  * 
  ******************************************************/
 void updateScreen()
 {
   // Temperature Demo
-  display.fillScreen(GxEPD_WHITE);
-  display.fillRoundRect(5, 5, 138, 64, 10, GxEPD_BLACK);
-  display.fillRoundRect(7, 7, 134, 60, 8, GxEPD_RED);
+  display.fillScreen(WHITE);
+  display.fillRoundRect(5, 5, 138, 64, 10, BLACK);
+  display.fillRoundRect(7, 7, 134, 60, 8, COLOR);
 
   display.setFont(&FreeMonoBold18pt7b);
 
-  display.setTextColor(GxEPD_WHITE);
+  display.setTextColor(WHITE);
   display.setCursor(10, 45);
   display.printf("%.1f C", currentTemperatureCelsius);
 
   // Date
   display.setFont(&FreeSansBold18pt7b);
-  display.setTextColor(GxEPD_RED);
+  display.setTextColor(COLOR);
   display.setCursor(160, 45);
   if (currentYear == 0)
     display.printf("--.--.----");
@@ -185,19 +168,19 @@ void updateScreen()
 
   // Udate Time
   display.setFont(&FreeSansBold9pt7b);
-  display.setTextColor(GxEPD_BLACK);
+  display.setTextColor(BLACK);
   display.setCursor(160, 65);
   if (currentYear == 0)
     display.printf("Last updated: --:--:--");
   else
     display.printf("Last updated: %02d:%02d:%02d", currentHour, currentMin, currentSec);
-  
+
   // Signal strength
-  drawSignalStrength( currentSignalStrength, 345, 10, 5, 7, 40, 5, 3);
+  chart.signalBars(&display, currentSignalStrength, 345, 10, 5, 7, 40, 5, 3, BLACK, COLOR);
 
   // Uptime and Memory stats
   display.setFont(&Org_01);
-  display.setTextColor(GxEPD_BLACK);
+  display.setTextColor(BLACK);
   display.setCursor(0, 290);
   display.printf("up: %us\nFree: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
                  uptime.getSeconds(),
@@ -213,7 +196,7 @@ void updateScreen()
   // Linecharts
   // Chart Title
   display.setFont(&FreeSansBold9pt7b);
-  display.setTextColor(GxEPD_BLACK);
+  display.setTextColor(BLACK);
   display.setCursor(10, 145);
   display.print("Temp");
   display.setCursor(145, 145);
@@ -223,7 +206,7 @@ void updateScreen()
 
   // Y-Axis Labels
   display.setFont(&Org_01);
-  display.setTextColor(GxEPD_BLACK);
+  display.setTextColor(BLACK);
   display.setCursor(2, 155);
   display.printf("%.1f", tempStats.max);
   display.setCursor(2, 249);
@@ -240,16 +223,15 @@ void updateScreen()
   display.printf("%.1f", pressStats.min);
 
   // Frame
-  display.drawFastHLine(0, 149, 400, GxEPD_BLACK);
-  display.drawFastHLine(0, 251, 400, GxEPD_BLACK);
-  display.drawFastVLine(133, 149, 102, GxEPD_BLACK);
-  display.drawFastVLine(266, 149, 102, GxEPD_BLACK);
+  display.drawFastHLine(0, 149, 400, BLACK);
+  display.drawFastHLine(0, 251, 400, BLACK);
+  display.drawFastVLine(133, 149, 102, BLACK);
+  display.drawFastVLine(266, 149, 102, BLACK);
 
   // Charts
-  chart.lineChart(&display, &tempStats, 0, 150, 130, 100, GxEPD_RED);
-  chart.lineChart(&display, &humStats, 135, 150, 130, 100, GxEPD_BLACK);
-  chart.lineChart(&display, &pressStats, 270, 150, 130, 100, GxEPD_BLACK);
-
+  chart.lineChart(&display, &tempStats, 0, 150, 130, 100, COLOR);
+  chart.lineChart(&display, &humStats, 135, 150, 130, 100, BLACK);
+  chart.lineChart(&display, &pressStats, 270, 150, 130, 100, BLACK);
 
   display.update();
 }
@@ -318,10 +300,10 @@ void setup()
   delay(100); // wait a bit, before display-class starts writing to serial out
 
   display.init(/*115200*/); // uncomment serial speed definition for debug output
-  io.setFrequency(500000L); // set to 500kHz; the default 4MHz-setting is unreliable with active modem and unshielded wiring
-  display.setTextColor(GxEPD_BLACK);
+  io.setFrequency(500000L); // set to 500kHz; the default setting (4MHz) could be unreliable with active modem and unshielded wiring
+  display.setTextColor(BLACK);
   display.setFont(&FreeMonoBold18pt7b);
-  display.fillScreen(GxEPD_WHITE);
+  display.fillScreen(WHITE);
   delay(100);
   initStage++;
 
@@ -344,7 +326,7 @@ void setup()
   // use modem.init() if you don't need the complete restart
   Serial.println("[  INIT  ] Initializing modem...");
   modem.restart();
-  
+
   String name = modem.getModemName();
   Serial.print("[  INIT  ] Modem Name: ");
   Serial.print(name);
@@ -353,12 +335,6 @@ void setup()
   Serial.println(modemInfo);
   initStage++;
 
-  // Unlock your SIM card with a PIN if needed
-  // if (strlen(simPIN) && modem.getSimStatus() != 3 ) {
-  //   Serial.println("Unlocking SIM...");
-  //   modem.simUnlock(simPIN);
-  // }
-  
   initStage++; // Init complete
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
@@ -405,7 +381,7 @@ void loop()
                   sizeof(humStats.data) + sizeof(Point) * humStats.data.capacity(),
                   pressStats.size(),
                   sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity(),
-                  uptime.getSeconds());  
+                  uptime.getSeconds());
   }
 
   // 300s Tasks
@@ -427,7 +403,7 @@ void loop()
 
     // update modem Information every time display is updated, to get current timestamp
     updateModemInfo();
-  
+
     if (enableDisplay)
     {
       Serial.print("[  DISP  ] Updating... ");
