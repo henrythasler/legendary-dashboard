@@ -52,7 +52,11 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <Fonts/FreeSansBold9pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeSansBold18pt7b.h>
+#include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/Org_01.h>
+
+// images
+#include <images.h>
 
 // Statistics Helper-Class
 #include <timeseries.h>
@@ -148,14 +152,9 @@ void updateScreen()
 {
   // Temperature Demo
   display.fillScreen(WHITE);
-  display.fillRoundRect(5, 5, 138, 64, 10, BLACK);
-  display.fillRoundRect(7, 7, 134, 60, 8, COLOR);
 
-  display.setFont(&FreeMonoBold18pt7b);
-
-  display.setTextColor(WHITE);
-  display.setCursor(10, 45);
-  display.printf("%.1f C", currentTemperatureCelsius);
+  display.drawBitmap(giftRed, 0, 0, 120, 120, COLOR, display.bm_invert);
+  display.drawBitmap(giftBlack, 0, 0, 120, 120, BLACK, display.bm_invert | display.bm_transparent);
 
   // Date
   display.setFont(&FreeSansBold18pt7b);
@@ -195,14 +194,14 @@ void updateScreen()
 
   // Linecharts
   // Chart Title
-  display.setFont(&FreeSansBold9pt7b);
+  display.setFont(&FreeSans12pt7b);
   display.setTextColor(BLACK);
-  display.setCursor(10, 145);
-  display.print("Temp");
-  display.setCursor(145, 145);
-  display.print("Hum");
-  display.setCursor(280, 145);
-  display.print("Press");
+  display.setCursor(0, 145);
+  display.printf("%.1f C", currentTemperatureCelsius);
+  display.setCursor(135, 145);
+  display.printf("%.0f %%", currentHumidityPercent);
+  display.setCursor(270, 145);
+  display.printf("%.0f hPa", currentPressurePascal / 100);
 
   // Y-Axis Labels
   display.setFont(&Org_01);
@@ -229,9 +228,15 @@ void updateScreen()
   display.drawFastVLine(266, 149, 102, BLACK);
 
   // Charts
-  chart.lineChart(&display, &tempStats, 0, 150, 130, 100, COLOR);
+  chart.lineChart(&display, &tempStats, 0, 150, 130, 100, BLACK);
   chart.lineChart(&display, &humStats, 135, 150, 130, 100, BLACK);
   chart.lineChart(&display, &pressStats, 270, 150, 130, 100, BLACK);
+
+  if (!((counter300s + 1) % 10))
+  {
+    display.drawBitmap(bsodRed, 0, 0, 400, 400, COLOR, display.bm_invert);
+    display.drawBitmap(bsodBlack, 0, 0, 400, 300, BLACK, display.bm_invert | display.bm_transparent);
+  }
 
   display.update();
 }
