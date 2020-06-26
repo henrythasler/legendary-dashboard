@@ -69,6 +69,17 @@ Run in background:
 $ platformio remote agent start 2>&1 >/dev/null &
 ```
 
+## Image conversion
+
+- go to [image2cpp](http://javl.github.io/image2cpp/)
+- upload an image
+- Background color: `White`
+- Brightness / alpha threshold: *as needed*
+- Code output format: `Arduino Code`
+- Draw mode: `Horizontal - 1 bit per pixel`
+- Press: `Generate code`
+- copy the **second** array into your project
+
 ## References
 
 ### ESP32
