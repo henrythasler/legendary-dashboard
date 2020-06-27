@@ -2,6 +2,7 @@
 #define CHART_H
 
 #include <timeseries.h>
+#include <InterpolationLib.h>
 
 #ifdef ARDUINO
 #include <GxEPD.h>
@@ -28,6 +29,20 @@ public:
                    bool yAxisMaxAuto = true,
                    float yAxisMin = 0,
                    float yAxisMax = 100);
+
+    void splineChart(GxEPD_Class *display,
+                   Timeseries *timeseries,
+                   uint16_t canvasLeft = 0,
+                   uint16_t canvasTop = 0,
+                   uint16_t canvasWidth = 300,
+                   uint16_t canvasHeight = 400,
+                   uint16_t lineColor = 0, // GxEPD_BLACK
+                   bool drawDataPoints = false,
+                   bool yAxisMinAuto = true,
+                   bool yAxisMaxAuto = true,
+                   float yAxisMin = 0,
+                   float yAxisMax = 100);
+
     void signalBars(GxEPD_Class *display,
                     int strength,
                     int x,
