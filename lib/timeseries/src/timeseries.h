@@ -13,9 +13,12 @@
 
 using namespace std;
 
-typedef std::vector<float> float_vec_t;
-typedef std::vector<int8_t> int8_vec_t;
-typedef std::pair<uint32_t, float> Point;
+typedef struct
+{
+  uint32_t time;
+  float value;
+} Point;
+
 typedef vector<Point>::const_iterator PointIterator;
 
 class Timeseries
