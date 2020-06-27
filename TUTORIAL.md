@@ -27,3 +27,13 @@
 ## (5) Remote Monitor
 
 ![remote-monitor](docs/tutorial/remote-monitor.png)
+
+## native Unit-tests
+
+These tests will be run locally on your PC
+
+![test-files](docs/tutorial/test-files.png)
+
+![test-native](docs/tutorial/test-native.png)
+
+![test-result](docs/tutorial/test-result.png)
