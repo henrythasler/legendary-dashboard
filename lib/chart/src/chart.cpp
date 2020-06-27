@@ -20,8 +20,8 @@ void Chart::lineChart(GxEPD_Class *display,
 {
     if (timeseries->data.size() > 1)
     {
-        uint32_t tMin = timeseries->data.front().first;
-        uint32_t tMax = timeseries->data.back().first;
+        uint32_t tMin = timeseries->data.front().time;
+        uint32_t tMax = timeseries->data.back().time;
 
         float dataMin = yAxisMinAuto ? timeseries->min : yAxisMin;
         float dataMax = yAxisMaxAuto ? timeseries->max : yAxisMax;
@@ -35,14 +35,14 @@ void Chart::lineChart(GxEPD_Class *display,
         float t1 = 0, y1 = 0, t2 = 0, y2 = 0;
         for (vector<Point>::const_iterator i = timeseries->data.begin() + 1; i != timeseries->data.end(); ++i)
         {
-            t1 = float(Point(*(i - 1)).first);
-            y1 = Point(*(i - 1)).second - dataOffset;
+            t1 = float(Point(*(i - 1)).time);
+            y1 = Point(*(i - 1)).value - dataOffset;
 
             screenX1 = canvasLeft + int16_t((t1 - tMin) * pixelPerTime);
             screenY1 = canvasTop + canvasHeight / 2 - int16_t(y1 * pixelPerValue);
 
-            t2 = float(Point(*i).first);
-            y2 = Point(*i).second - dataOffset;
+            t2 = float(Point(*i).time);
+            y2 = Point(*i).value - dataOffset;
 
             screenX2 = canvasLeft + int16_t((t2 - tMin) * pixelPerTime);
             screenY2 = canvasTop + canvasHeight / 2 - int16_t(y2 * pixelPerValue);
