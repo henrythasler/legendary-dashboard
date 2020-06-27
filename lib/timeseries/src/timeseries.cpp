@@ -20,7 +20,7 @@ bool Timeseries::push(uint32_t timestamp, float value)
       updateStats = true;
       data.erase(data.begin());
     }
-    data.push_back(Point(timestamp, value));
+    data.push_back(Point({timestamp, value}));
 
     if (updateStats)
     {
@@ -29,7 +29,7 @@ bool Timeseries::push(uint32_t timestamp, float value)
       float val = 0;
       for (PointIterator i = data.begin(); i != data.end(); ++i)
       {
-        val = float(Point(*i).second);
+        val = float(Point(*i).value);
         min = val < min ? val : min;
         max = val > max ? val : max;
       }
@@ -55,10 +55,10 @@ float Timeseries::mean()
 
   if (data.size())
   {
-    mean = data[0].second;
+    mean = data[0].value;
     for (PointIterator i = data.begin() + 1; i != data.end(); ++i)
     {
-      mean += float(Point(*i).second);
+      mean += float(Point(*i).value);
     }
     mean = mean / data.size();
   }
@@ -78,8 +78,8 @@ uint32_t Timeseries::capacity()
 // from: https://rosettacode.org/wiki/Ramer-Douglas-Peucker_line_simplification#C.2B.2B
 float Timeseries::perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd)
 {
-  float dx = float(lineEnd.first) - float(lineStart.first);
-  float dy = lineEnd.second - lineStart.second;
+  float dx = float(lineEnd.time) - float(lineStart.time);
+  float dy = lineEnd.value - lineStart.value;
 
   //Normalise
   float mag = pow(pow(dx, 2.0) + pow(dy, 2.0), 0.5);
@@ -89,8 +89,8 @@ float Timeseries::perpendicularDistance(const Point &pt, const Point &lineStart,
     dy /= mag;
   }
 
-  float pvx = float(pt.first) - float(lineStart.first);
-  float pvy = pt.second - lineStart.second;
+  float pvx = float(pt.time) - float(lineStart.time);
+  float pvy = pt.value - lineStart.value;
 
   //Get dot product (project pv onto normalized direction)
   float pvdot = dx * pvx + dy * pvy;
@@ -193,7 +193,7 @@ int32_t Timeseries::trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds)
     if (data.size())
     {
       PointIterator i = data.begin();
-      while (Point(*i).first + maxAgeSeconds < currentTimeSeconds)
+      while (Point(*i).time + maxAgeSeconds < currentTimeSeconds)
       {
         i++;
       }

@@ -81,6 +81,33 @@ The [GxEPD E-Paper display library](https://github.com/ZinggJM/GxEPD) has some d
 
 The low-pulse with 10ms is too short to wake up the display from sleep-mode. Increasing the gap duration to 100ms (`delay(100);`) has solved the issue for me.
 
+## pair vs. struct
+
+Using [struct](https://www.geeksforgeeks.org/structures-c/) over [pair](https://www.geeksforgeeks.org/pair-in-cpp-stl/) in a [vector](https://www.geeksforgeeks.org/vector-in-cpp-stl/) has shown a significant speed improvement:
+
+### using pair
+
+```cpp
+typedef std::pair<uint32_t, float> Point;
+vector<Point> data;
+```
+
+test execution time: 11.76s
+
+### using struct
+
+```cpp
+typedef struct
+{
+  uint32_t time;
+  float value;
+} Point;
+
+vector<Point> data;
+```
+
+test execution time: 7.58s (**-26%**)
+
 ## Streaming display-content via webcam 
 
 Remote developers using [PIO Remote](https://docs.platformio.org/en/latest/plus/pio-remote.html) can be supported by using the Rasperry Pi camera to stream a video of the e-Paper display and the board itself (to check on LEDs) in their browser:
