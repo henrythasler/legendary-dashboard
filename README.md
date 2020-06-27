@@ -120,3 +120,4 @@ $ platformio remote agent start 2>&1 >/dev/null &
 
 - [Ramer-Douglas-Peucker line simplification](https://rosettacode.org/wiki/Ramer-Douglas-Peucker_line_simplification#C.2B.2B)
 - [Robust endianness conversion](https://mklimenko.github.io/english/2018/08/22/robust-endian-swap/)
+- [Overloading operators in typedef structs (c++)](https://stackoverflow.com/questions/14047191/overloading-operators-in-typedef-structs-c)

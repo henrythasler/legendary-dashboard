@@ -13,11 +13,26 @@
 
 using namespace std;
 
-typedef struct
+struct Point
 {
   uint32_t time;
   float value;
-} Point;
+
+  Point operator+(const Point &a) const
+  {
+    return {a.time + time, a.value + value};
+  }
+  
+  Point operator-(const Point &a) const
+  {
+    return {a.time - time, a.value - value};
+  }
+
+  Point operator*(const Point &a) const
+  {
+    return {a.time * time, a.value * value};
+  }
+};
 
 typedef vector<Point>::const_iterator PointIterator;
 
@@ -31,6 +46,9 @@ public:
 
   vector<Point> data;
 
+  vector<Point> _p1Points;
+  vector<Point> _p2Points;
+
   Timeseries(uint32_t maxLength = 32);
 
   bool push(uint32_t timestamp, float value);
@@ -42,5 +60,7 @@ public:
 
   float perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd);
   void ramerDouglasPeucker(const vector<Point> &pointList, float epsilon, vector<Point> &out);
+
+  bool computeSpline(void);
 };
 #endif
