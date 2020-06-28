@@ -37,3 +37,19 @@ These tests will be run locally on your PC
 ![test-native](docs/tutorial/test-native.png)
 
 ![test-result](docs/tutorial/test-result.png)
+
+## Image conversion
+
+This is how it works with [GIMP](https://www.gimp.org/). 
+
+1. Create an image with the size of your display (e.g. 400x300).
+2. Adjust brightness and contrast to almost extreme values.
+3. Create a palette that represents the colors available on your display and convert the image:
+
+![test-native](docs/tutorial/image-palette.png)
+
+![test-native](docs/tutorial/image-mode.png)
+
+![test-native](docs/tutorial/image-convert.png)
+
+4. separate both colors (black, yellow) and save each into a separate file. Convert each file with [image2cpp](http://javl.github.io/image2cpp/) 
