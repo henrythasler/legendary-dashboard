@@ -221,17 +221,25 @@ int32_t Timeseries::trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds)
 void Timeseries::movingAverage(int32_t samples)
 {
   vector<Point> tmp = data;
+  float div = 1;
   try
   {
     for (int32_t i = 0; i < data.size(); i++)
     {
+      div = 1;
       for (int32_t j = -samples; j <= samples; j++)
       {
-        data.at(i).time += tmp.at(std::min(std::max(i + j, 0), int32_t(data.size() - 1))).time;
-        data.at(i).value += tmp.at(std::min(std::max(i + j, 0), int32_t(data.size() - 1))).value;
+        if ((j != 0) /*&& ((i + j) >= 0) && ((i + j) < data.size())*/)
+        {
+          // data.at(i).time += tmp.at(i + j).time;
+          // data.at(i).value += tmp.at(i + j).value;
+          data.at(i).time += tmp.at(std::min(std::max(i + j,0), int(data.size()-1))).time;
+          data.at(i).value += tmp.at(std::min(std::max(i + j,0), int(data.size()-1))).value;
+          div += 1;
+        }
       }
-      data.at(i).time /= float(samples) * 2 + 1;
-      data.at(i).value /= float(samples) * 2 + 1;
+      data.at(i).time /= div;
+      data.at(i).value /= div;
     }
   }
   catch (const std::exception &e)

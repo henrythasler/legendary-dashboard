@@ -87,7 +87,6 @@ void test_function_timeseries_huge(void)
 void test_function_timeseries_rdp_synth1(void)
 {
   Timeseries series;
-  vector<Point>::const_iterator i;
 
   vector<Point> examplePoint;
   vector<Point> pointListOut;
@@ -111,7 +110,6 @@ void test_function_timeseries_rdp_synth1(void)
 void test_function_timeseries_rdp_synth2(void)
 {
   Timeseries series;
-  vector<Point>::const_iterator i;
 
   vector<Point> examplePoint;
   vector<Point> pointListOut;
@@ -297,7 +295,7 @@ void test_function_timeseries_trim_compact_simple(void)
   TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(1).value);
 }
 
-void test_function_timeseries_average_simple(void)
+void test_function_timeseries_average_identity(void)
 {
   Timeseries series(10);
   series.push(0, 0);
@@ -307,22 +305,78 @@ void test_function_timeseries_average_simple(void)
   series.push(4, 4);
   series.push(5, 5);
   series.movingAverage(1);
+  
   TEST_ASSERT_EQUAL_UINT32(6, series.size());
-
-
-  for (Point &p : series.data)
-  {
-#ifdef ARDUINO
-    Serial.printf("%u/%f ", p.time, p.value);
-#else
-    printf("%u/%f ", p.time, p.value);
-#endif    
-  }  
-
-  TEST_ASSERT_EQUAL_INT32(1/3, series.data.at(0).time);
-  TEST_ASSERT_EQUAL_FLOAT(1/3, series.data.at(0).value);
-  TEST_ASSERT_EQUAL_INT32(2, series.data.at(2).time);
+//   for (Point &p : series.data)
+//   {
+// #ifdef ARDUINO
+//     Serial.printf("%f/%f\n", p.time, p.value);
+// #else
+//     printf("%f/%f\n", p.time, p.value);
+// #endif    
+//   }    
+  TEST_ASSERT_EQUAL_FLOAT(1./3, series.data.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(1./3, series.data.at(0).value);
+  TEST_ASSERT_EQUAL_FLOAT(1., series.data.at(1).time);
+  TEST_ASSERT_EQUAL_FLOAT(1., series.data.at(1).value);
+  TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(2).time);
   TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(2).value);    
+  TEST_ASSERT_EQUAL_FLOAT(3., series.data.at(3).time);
+  TEST_ASSERT_EQUAL_FLOAT(3., series.data.at(3).value);
+  TEST_ASSERT_EQUAL_FLOAT(4., series.data.at(4).time);
+  TEST_ASSERT_EQUAL_FLOAT(4., series.data.at(4).value);
+  TEST_ASSERT_EQUAL_FLOAT(4.+2./3, series.data.at(5).time);
+  TEST_ASSERT_EQUAL_FLOAT(4.+2./3, series.data.at(5).value);    
+}
+
+void test_function_timeseries_average_step(void)
+{
+  Timeseries series(20);
+  for(int i=0;i<20;i++){
+    if(i<10)
+      series.push(i, 0);  
+      else
+            series.push(i, 1);  
+
+  }
+  series.movingAverage(2);
+  TEST_ASSERT_EQUAL_UINT32(20, series.size());
+
+//   for (Point &p : series.data)
+//   {
+// #ifdef ARDUINO
+//     Serial.printf("%f/%f\n", p.time, p.value);
+// #else
+//     printf("%f/%f\n", p.time, p.value);
+// #endif    
+//   }  
+
+  TEST_ASSERT_EQUAL_FLOAT(0.6, series.data.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(0., series.data.at(0).value);
+  TEST_ASSERT_EQUAL_FLOAT(9., series.data.at(9).time);
+  TEST_ASSERT_EQUAL_FLOAT(0.4, series.data.at(9).value);
+  TEST_ASSERT_EQUAL_FLOAT(10., series.data.at(10).time);
+  TEST_ASSERT_EQUAL_FLOAT(0.6, series.data.at(10).value);
+  TEST_ASSERT_EQUAL_FLOAT(18.4, series.data.at(19).time);
+  TEST_ASSERT_EQUAL_FLOAT(1., series.data.at(19).value);    
+}
+
+void test_function_timeseries_average_huge(void)
+{
+  Timeseries series(5000);
+  for(int i=0;i<5000;i++){
+      series.push(i, i%10);  
+  }
+  series.movingAverage(10);
+  TEST_ASSERT_EQUAL_UINT32(5000, series.size());
+
+//   for(int i=0;i<50;i++){
+// #ifdef ARDUINO
+//     Serial.printf("%f/%f\n", series.data.at(i).time, series.data.at(i).value);
+// #else
+//     printf("%f/%f\n", series.data.at(i).time, series.data.at(i).value);
+// #endif    
+//   }    
 }
 
 void process(void)
@@ -342,7 +396,9 @@ void process(void)
   RUN_TEST(test_function_timeseries_trim_simple);
   RUN_TEST(test_function_timeseries_trim_none);
   RUN_TEST(test_function_timeseries_trim_compact_simple);
-  RUN_TEST(test_function_timeseries_average_simple);
+  RUN_TEST(test_function_timeseries_average_identity);
+  RUN_TEST(test_function_timeseries_average_step);
+  RUN_TEST(test_function_timeseries_average_huge);
   UNITY_END();
 }
 

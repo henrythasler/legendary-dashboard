@@ -40,13 +40,6 @@ struct Point
   }
 };
 
-struct Coeff
-{
-  float c1;
-  float c2;
-  float c3;
-};
-
 typedef vector<Point>::const_iterator PointIterator;
 
 #ifndef PI
@@ -80,6 +73,6 @@ public:
   float perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd);
   void ramerDouglasPeucker(const vector<Point> &pointList, float epsilon, vector<Point> &out);
 
-  void movingAverage(int32_t samples = 5);
+  void movingAverage(int32_t radius = 5);
 };
 #endif
