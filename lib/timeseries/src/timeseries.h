@@ -52,13 +52,8 @@ public:
   float min;
   float max;
   uint32_t maxHistoryLength;
-  uint32_t id = 0;
 
   vector<Point> data;
-  vector<float> kernel;
-
-  vector<Point> _p1Points;
-  vector<Point> _p2Points;
 
   Timeseries(uint32_t maxLength = 32);
 

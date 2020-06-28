@@ -24,8 +24,6 @@ bool Timeseries::push(float timestamp, float value)
 
     if (updateStatsNeeded)
       updateStats();
-
-    id++;
   }
   // this could be out-of-memory situations or the block size is too big to be allocated
   catch (const exception &e)

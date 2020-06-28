@@ -153,13 +153,6 @@ void updateScreen()
   // Temperature Demo
   display.fillScreen(WHITE);
 
-  Timeseries mod(5000U);
-  mod.data.assign(tempStats.data.begin(), tempStats.data.end());
-  mod.updateStats();
-  mod.movingAverage(5);
-  chart.lineChart(&display, &tempStats, 0, 0, 400, 300, GxEPD_RED);
-  chart.lineChart(&display, &mod, 0,0,400,300, GxEPD_BLACK, true);  
-
   display.drawBitmap(giftRed, 0, 0, 120, 120, COLOR, display.bm_invert);
   display.drawBitmap(giftBlack, 0, 0, 120, 120, BLACK, display.bm_invert | display.bm_transparent);
 
