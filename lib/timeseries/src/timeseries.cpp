@@ -7,7 +7,7 @@ Timeseries::Timeseries(uint32_t maxLength)
   maxHistoryLength = maxLength;
 }
 
-bool Timeseries::push(uint32_t timestamp, float value)
+bool Timeseries::push(float timestamp, float value)
 {
   bool updateStatsNeeded = false;
   min = value < min ? value : min;
@@ -62,7 +62,7 @@ float Timeseries::mean()
     mean = data[0].value;
     for (PointIterator i = data.begin() + 1; i != data.end(); ++i)
     {
-      mean += float(Point(*i).value);
+      mean += Point(*i).value;
     }
     mean = mean / data.size();
   }
@@ -82,7 +82,7 @@ uint32_t Timeseries::capacity()
 // from: https://rosettacode.org/wiki/Ramer-Douglas-Peucker_line_simplification#C.2B.2B
 float Timeseries::perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd)
 {
-  float dx = float(lineEnd.time) - float(lineStart.time);
+  float dx = lineEnd.time - lineStart.time;
   float dy = lineEnd.value - lineStart.value;
 
   //Normalise
@@ -93,7 +93,7 @@ float Timeseries::perpendicularDistance(const Point &pt, const Point &lineStart,
     dy /= mag;
   }
 
-  float pvx = float(pt.time) - float(lineStart.time);
+  float pvx = pt.time - lineStart.time;
   float pvy = pt.value - lineStart.value;
 
   //Get dot product (project pv onto normalized direction)

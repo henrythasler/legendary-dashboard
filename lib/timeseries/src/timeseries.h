@@ -14,11 +14,38 @@
 
 using namespace std;
 
-typedef struct
+struct Point
 {
-  uint32_t time;
+  float time;
   float value;
-} Point;
+
+  Point(float time = 0, float value = 0)
+      : time(time), value(value)
+  {
+  }
+
+  Point operator+(const Point &a) const
+  {
+    return {a.time + time, a.value + value};
+  }
+
+  Point operator-(const Point &a) const
+  {
+    return {a.time - time, a.value - value};
+  }
+
+  Point operator*(const Point &a) const
+  {
+    return {a.time * time, a.value * value};
+  }
+};
+
+struct Coeff
+{
+  float c1;
+  float c2;
+  float c3;
+};
 
 typedef vector<Point>::const_iterator PointIterator;
 
@@ -37,10 +64,13 @@ public:
   vector<Point> data;
   vector<float> kernel;
 
+  vector<Point> _p1Points;
+  vector<Point> _p2Points;
+
   Timeseries(uint32_t maxLength = 32);
 
-  bool push(uint32_t timestamp, float value);
   void updateStats(void);
+  bool push(float timestamp, float value);
   uint32_t size();
   uint32_t capacity();
   float mean();

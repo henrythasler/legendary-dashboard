@@ -53,9 +53,9 @@ void test_function_timeseries_limiter(void)
   TEST_ASSERT_EQUAL_FLOAT_MESSAGE(3.5, series.mean(), "series.mean()");
   TEST_ASSERT_EQUAL_UINT32(4, series.size());
 
-  TEST_ASSERT_EQUAL_INT32(2, series.data.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).time);
   TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).value);
-  TEST_ASSERT_EQUAL_INT32(5, series.data.at(3).time);
+  TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(3).time);
   TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(3).value);
 }
 
@@ -101,11 +101,11 @@ void test_function_timeseries_rdp_synth1(void)
 
   TEST_ASSERT_EQUAL_INT32_MESSAGE(2, pointListOut.size(), "pointListOut.size()");
 
-  TEST_ASSERT_EQUAL_INT32(1, pointListOut.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(1., pointListOut.at(0).time);
   TEST_ASSERT_EQUAL_FLOAT(1., pointListOut.at(0).value);
 
-  TEST_ASSERT_EQUAL_INT32(4, pointListOut.at(1).time);
-  TEST_ASSERT_EQUAL_FLOAT(4, pointListOut.at(1).value);
+  TEST_ASSERT_EQUAL_FLOAT(4., pointListOut.at(1).time);
+  TEST_ASSERT_EQUAL_FLOAT(4., pointListOut.at(1).value);
 }
 
 void test_function_timeseries_rdp_synth2(void)
@@ -125,14 +125,14 @@ void test_function_timeseries_rdp_synth2(void)
 
   TEST_ASSERT_EQUAL_INT32_MESSAGE(3, pointListOut.size(), "pointListOut.size()");
 
-  TEST_ASSERT_EQUAL_INT32(5, pointListOut.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(5., pointListOut.at(0).time);
   TEST_ASSERT_EQUAL_FLOAT(0., pointListOut.at(0).value);
 
-  TEST_ASSERT_EQUAL_INT32(3, pointListOut.at(1).time);
-  TEST_ASSERT_EQUAL_FLOAT(0, pointListOut.at(1).value);
+  TEST_ASSERT_EQUAL_FLOAT(3., pointListOut.at(1).time);
+  TEST_ASSERT_EQUAL_FLOAT(0., pointListOut.at(1).value);
 
-  TEST_ASSERT_EQUAL_INT32(3, pointListOut.at(2).time);
-  TEST_ASSERT_EQUAL_FLOAT(2, pointListOut.at(2).value);
+  TEST_ASSERT_EQUAL_FLOAT(3., pointListOut.at(2).time);
+  TEST_ASSERT_EQUAL_FLOAT(2., pointListOut.at(2).value);
 }
 
 // from https://github.com/LukaszWiktor/series-reducer
@@ -148,7 +148,7 @@ void test_function_timeseries_rdp_math(void)
 
   for (uint32_t x = 0; x <= 80; x++)
   {
-    examplePoint.push_back(Point({x, float(cos((float(x) / 20.) * (float(x) / 20.) - 1.)) * float(20.)}));
+    examplePoint.push_back(Point({float(x), float(cos((float(x) / 20.) * (float(x) / 20.) - 1.)) * float(20.)}));
     exampleFlat.push_back(cos((float(x) / 20.) * (float(x) / 20.) - 1) * 20);
   }
 
@@ -217,9 +217,9 @@ void test_function_timeseries_compact_huge(void)
     }
     TEST_ASSERT_EQUAL_INT32_MESSAGE(2, series.data.size(), "series.data.size()");
 
-    TEST_ASSERT_EQUAL_INT32(0, series.data.front().time);
+    TEST_ASSERT_EQUAL_FLOAT(0., series.data.front().time);
     TEST_ASSERT_EQUAL_FLOAT(1., series.data.front().value);
-    TEST_ASSERT_EQUAL_INT32(99999, series.data.back().time);
+    TEST_ASSERT_EQUAL_FLOAT(99999., series.data.back().time);
     TEST_ASSERT_EQUAL_FLOAT(1., series.data.back().value);
   }
   catch (const std::exception &e)
@@ -247,9 +247,9 @@ void test_function_timeseries_trim_simple(void)
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(2, removed, "removed");
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(4, series.size(), "size()");
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(8, series.capacity(), "capacity()");
-  TEST_ASSERT_EQUAL_INT32(2, series.data.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).time);
   TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).value);
-  TEST_ASSERT_EQUAL_INT32(5, series.data.at(3).time);
+  TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(3).time);
   TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(3).value);
 }
 
@@ -269,9 +269,9 @@ void test_function_timeseries_trim_none(void)
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(0, removed, "removed");
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(6, series.size(), "size()");
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(8, series.capacity(), "capacity() after trim()");
-  TEST_ASSERT_EQUAL_INT32(0, series.data.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(0., series.data.at(0).time);
   TEST_ASSERT_EQUAL_FLOAT(0., series.data.at(0).value);
-  TEST_ASSERT_EQUAL_INT32(5, series.data.at(5).time);
+  TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(5).time);
   TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(5).value);
 }
 
@@ -291,9 +291,9 @@ void test_function_timeseries_trim_compact_simple(void)
   bool compactResult = series.compact();
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(2, series.size(), "size()");
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(2, series.capacity(), "capacity()");
-  TEST_ASSERT_EQUAL_INT32(2, series.data.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).time);
   TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).value);
-  TEST_ASSERT_EQUAL_INT32(5, series.data.at(1).time);
+  TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(1).time);
   TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(1).value);
 }
 
