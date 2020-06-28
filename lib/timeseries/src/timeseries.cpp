@@ -213,3 +213,79 @@ int32_t Timeseries::trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds)
 
   return removedEntries;
 }
+
+float Timeseries::gauss(float sigma, float x)
+{
+  float expVal = -1 * (x * x) / (2 * sigma * sigma);
+  float divider = 2 * PI * sigma * sigma;
+  return exp(expVal)/divider;
+}
+
+void Timeseries::calulateKernel(int samples, float sigma)
+{
+
+  float sum = 0., val = 0.;
+  bool doubleCenter = false;
+  if (samples % 2 == 0)
+  {
+    doubleCenter = true;
+    samples--;
+  }
+
+  int16_t steps = (samples - 1) / 2;
+  float stepSize = (3 * sigma) / steps;
+
+  kernel.clear();
+
+  for (int i = steps; i >= 1; i--)
+  {
+    val = gauss(sigma, i * stepSize * -1);
+    sum = sum + val;
+    kernel.push_back(val);
+  }
+
+  val = gauss(sigma, 0);
+  sum += val;
+  kernel.push_back(val);
+  if (doubleCenter)
+  {
+    val = gauss(sigma, 0);
+    sum += val;
+    kernel.push_back(val);
+  }
+
+  for (int i = 1; i <= steps; i++)
+  {
+    val = gauss(sigma, i * stepSize);
+    sum += val;
+    kernel.push_back(val);
+  }
+
+  for (float &i : kernel)
+    i /= sum;
+}
+
+
+void Timeseries::applyFilter(uint8_t samples, float sigma)
+{
+  vector<Point> out;
+
+    calulateKernel(samples, sigma);
+    int32_t sampleSide = samples / 2;
+    uint32_t ubound = data.size();
+    for (uint32_t i = 0; i < ubound; i++) {
+        float sample = 0;
+        int32_t sampleCtr = 0;
+        for (long j = i - sampleSide; j <= i + sampleSide; j++) {
+            if (j > 0 && j < ubound) {
+                int32_t sampleWeightIndex = sampleSide + (j - i);
+                sample += kernel[sampleWeightIndex] * data[j].value;
+                sampleCtr++;
+            }
+        }
+        float smoothed = sample / (float)sampleCtr;
+        out.push_back(Point({data.at(i).time, smoothed}));
+    }
+
+  data.assign(out.begin(), out.end());
+}

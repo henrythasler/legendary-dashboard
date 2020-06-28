@@ -21,6 +21,10 @@ typedef struct
 
 typedef vector<Point>::const_iterator PointIterator;
 
+#ifndef PI
+# define PI           3.14159265358979323846  /* pi */
+#endif
+
 class Timeseries
 {
 public:
@@ -30,6 +34,7 @@ public:
   uint32_t id = 0;
 
   vector<Point> data;
+  vector<float> kernel;
 
   Timeseries(uint32_t maxLength = 32);
 
@@ -42,5 +47,9 @@ public:
 
   float perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd);
   void ramerDouglasPeucker(const vector<Point> &pointList, float epsilon, vector<Point> &out);
+
+  float gauss(float sigma, float x);
+  void calulateKernel(int samples, float sigma);
+  void applyFilter(uint8_t samples=5, float sigma=1.0);
 };
 #endif
