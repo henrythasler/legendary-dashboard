@@ -401,9 +401,12 @@ void loop()
       pressStats.trim(uptime.getSeconds(), 7 * 24 * 3600);
 
       // filter high-frequency noise
-      tempStats.movingAverage(5);
-      humStats.movingAverage(5);
-      pressStats.movingAverage(5);
+      if (tempStats.data.size() > 10)
+        tempStats.movingAverage(3);
+      if (humStats.data.size() > 10)
+        humStats.movingAverage(3);
+      if (pressStats.data.size() > 10)
+        pressStats.movingAverage(3);
 
       // apply compression (Ramer-Douglas-Peucker)
       tempStats.compact(0.05);
