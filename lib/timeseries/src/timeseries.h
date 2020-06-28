@@ -6,7 +6,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <sys/time.h>
-#include <algorithm> 
+#include <algorithm>
 
 #ifdef ARDUINO
 #include <Arduino.h>
@@ -23,7 +23,7 @@ typedef struct
 typedef vector<Point>::const_iterator PointIterator;
 
 #ifndef PI
-# define PI           3.14159265358979323846  /* pi */
+#define PI 3.14159265358979323846 /* pi */
 #endif
 
 class Timeseries
@@ -50,8 +50,6 @@ public:
   float perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd);
   void ramerDouglasPeucker(const vector<Point> &pointList, float epsilon, vector<Point> &out);
 
-  float gauss(float sigma, float x);
-  void calulateKernel(int samples, float sigma);
-  void applyFilter(int32_t samples=5);
+  void movingAverage(int32_t samples = 5);
 };
 #endif

@@ -297,43 +297,33 @@ void test_function_timeseries_trim_compact_simple(void)
   TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(1).value);
 }
 
-void test_function_timeseries_calulateKernel(void)
+void test_function_timeseries_average_simple(void)
 {
   Timeseries series(10);
-
   series.push(0, 0);
-  series.push(1, 5);
-  series.push(2, 0);
-  series.push(3, 5);
-  series.push(4, 0);
-  series.push(5, 5);  
+  series.push(1, 1);
+  series.push(2, 2);
+  series.push(3, 3);
+  series.push(4, 4);
+  series.push(5, 5);
+  series.movingAverage(1);
+  TEST_ASSERT_EQUAL_UINT32(6, series.size());
 
-  series.calulateKernel(5, 1);
-  float sum=0;
 
-  for(float &i : series.kernel) {
-#ifndef ARDUINO
-    printf("%f ", i);
-#endif
-    sum += i;
-  }
-  TEST_ASSERT_EQUAL_FLOAT(1., sum);
+  for (Point &p : series.data)
+  {
+#ifdef ARDUINO
+    Serial.printf("%u/%f ", p.time, p.value);
+#else
+    printf("%u/%f ", p.time, p.value);
+#endif    
+  }  
+
+  TEST_ASSERT_EQUAL_INT32(1/3, series.data.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(1/3, series.data.at(0).value);
+  TEST_ASSERT_EQUAL_INT32(2, series.data.at(2).time);
+  TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(2).value);    
 }
-
-
-void test_function_timeseries_applyKernel(void)
-{
-  Timeseries series(10);
-  series.applyFilter();
-
-  for(float &i : series.data) {
-#ifndef ARDUINO
-    printf("%f ", i);
-#endif
-  }
-
-}
-
 
 void process(void)
 {
@@ -352,7 +342,7 @@ void process(void)
   RUN_TEST(test_function_timeseries_trim_simple);
   RUN_TEST(test_function_timeseries_trim_none);
   RUN_TEST(test_function_timeseries_trim_compact_simple);
-  RUN_TEST(test_function_timeseries_calulateKernel);
+  RUN_TEST(test_function_timeseries_average_simple);
   UNITY_END();
 }
 

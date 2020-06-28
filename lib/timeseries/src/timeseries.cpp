@@ -9,7 +9,7 @@ Timeseries::Timeseries(uint32_t maxLength)
 
 bool Timeseries::push(uint32_t timestamp, float value)
 {
-  bool updateStats = false;
+  bool updateStatsNeeded = false;
   min = value < min ? value : min;
   max = value > max ? value : max;
 
@@ -17,23 +17,14 @@ bool Timeseries::push(uint32_t timestamp, float value)
   {
     if (data.size() >= maxHistoryLength)
     {
-      updateStats = true;
+      updateStatsNeeded = true;
       data.erase(data.begin());
     }
     data.push_back(Point({timestamp, value}));
 
-    if (updateStats)
-    {
-      min = 1e12;
-      max = -1e12;
-      float val = 0;
-      for (PointIterator i = data.begin(); i != data.end(); ++i)
-      {
-        val = float(Point(*i).value);
-        min = val < min ? val : min;
-        max = val > max ? val : max;
-      }
-    }
+    if (updateStatsNeeded)
+      updateStats();
+
     id++;
   }
   catch (const exception &e)
@@ -51,15 +42,15 @@ bool Timeseries::push(uint32_t timestamp, float value)
 
 void Timeseries::updateStats()
 {
-      min = 1e12;
-      max = -1e12;
-      float val = 0;
-      for (PointIterator i = data.begin(); i != data.end(); ++i)
-      {
-        val = float(Point(*i).value);
-        min = val < min ? val : min;
-        max = val > max ? val : max;
-      }  
+  min = 1e12;
+  max = -1e12;
+  for (Point &p : data)
+  {
+    {
+      min = p.value < min ? p.value : min;
+      max = p.value > max ? p.value : max;
+    }
+  }
 }
 
 float Timeseries::mean()
@@ -227,58 +218,7 @@ int32_t Timeseries::trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds)
   return removedEntries;
 }
 
-float Timeseries::gauss(float sigma, float x)
-{
-  float expVal = -1 * (x * x) / (2 * sigma * sigma);
-  float divider = 2 * PI * sigma * sigma;
-  return exp(expVal) / divider;
-}
-
-void Timeseries::calulateKernel(int samples, float sigma)
-{
-
-  float sum = 0., val = 0.;
-  bool doubleCenter = false;
-  if (samples % 2 == 0)
-  {
-    doubleCenter = true;
-    samples--;
-  }
-
-  int16_t steps = (samples - 1) / 2;
-  float stepSize = (3 * sigma) / steps;
-
-  kernel.clear();
-
-  for (int i = steps; i >= 1; i--)
-  {
-    val = gauss(sigma, i * stepSize * -1);
-    sum = sum + val;
-    kernel.push_back(val);
-  }
-
-  val = gauss(sigma, 0);
-  sum += val;
-  kernel.push_back(val);
-  if (doubleCenter)
-  {
-    val = gauss(sigma, 0);
-    sum += val;
-    kernel.push_back(val);
-  }
-
-  for (int i = 1; i <= steps; i++)
-  {
-    val = gauss(sigma, i * stepSize);
-    sum += val;
-    kernel.push_back(val);
-  }
-
-  for (float &i : kernel)
-    i /= sum;
-}
-
-void Timeseries::applyFilter(int32_t samples)
+void Timeseries::movingAverage(int32_t samples)
 {
   vector<Point> tmp = data;
   try
@@ -297,9 +237,9 @@ void Timeseries::applyFilter(int32_t samples)
   catch (const std::exception &e)
   {
 #ifdef ARDUINO
-    Serial.printf("[ ERROR ] Timeseries::applyFilter(): %s\n", e.what());
+    Serial.printf("[ ERROR ] Timeseries::movingAverage(): %s\n", e.what());
 #else
-    printf("Error in Timeseries::applyFilter(): %s\n", e.what());
+    printf("Error in Timeseries::movingAverage(): %s\n", e.what());
 #endif
   }
 }

@@ -156,7 +156,7 @@ void updateScreen()
   // Timeseries mod(5000U);
   // mod.data.assign(tempStats.data.begin(), tempStats.data.end());
   // mod.updateStats();
-  // mod.applyFilter(5);
+  // mod.movingAverage(5);
   // chart.lineChart(&display, &tempStats, 0, 0, 400, 300, GxEPD_RED);
   // chart.lineChart(&display, &mod, 0,0,400,300, GxEPD_BLACK, true);  
 
@@ -167,25 +167,25 @@ void updateScreen()
   }
   mod.data.assign(dampedCosine.data.begin(), dampedCosine.data.end());
   mod.updateStats();
-  mod.applyFilter(3);
+  mod.movingAverage(3);
   chart.lineChart(&display, &dampedCosine, 5, 5, 190, 140, GxEPD_RED);
   chart.lineChart(&display, &mod, 5, 5, 190, 140, GxEPD_BLACK, true);
 
   mod.data.assign(dampedCosine.data.begin(), dampedCosine.data.end());
   mod.updateStats();
-  mod.applyFilter(5);
+  mod.movingAverage(5);
   chart.lineChart(&display, &dampedCosine, 205, 5, 190, 140, GxEPD_RED);
   chart.lineChart(&display, &mod, 205, 5, 190, 140, GxEPD_BLACK, true);
 
   mod.data.assign(dampedCosine.data.begin(), dampedCosine.data.end());
   mod.updateStats();
-  mod.applyFilter(9);
+  mod.movingAverage(9);
   chart.lineChart(&display, &dampedCosine, 5, 155, 190, 140, GxEPD_RED);
   chart.lineChart(&display, &mod, 5, 155, 190, 140, GxEPD_BLACK, true);
 
   mod.data.assign(dampedCosine.data.begin(), dampedCosine.data.end());
   mod.updateStats();
-  mod.applyFilter(15);
+  mod.movingAverage(15);
   chart.lineChart(&display, &dampedCosine, 205, 155, 190, 140, GxEPD_RED);
   chart.lineChart(&display, &mod, 205, 155, 190, 140, GxEPD_BLACK, true);
 
