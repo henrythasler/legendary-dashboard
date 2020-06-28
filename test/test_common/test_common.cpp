@@ -8,7 +8,7 @@
 
 typedef std::vector<float> float_vec_t;
 
-void test_function_statistics_initial(void)
+void test_function_timeseries_initial(void)
 {
   Timeseries series;
   TEST_ASSERT_EQUAL_FLOAT(float(1e12), series.min);
@@ -17,7 +17,7 @@ void test_function_statistics_initial(void)
   TEST_ASSERT_EQUAL_UINT32(0, series.size());
 }
 
-void test_function_statistics_single(void)
+void test_function_timeseries_single(void)
 {
   Timeseries series(8);
   series.push(0, 2);
@@ -27,7 +27,7 @@ void test_function_statistics_single(void)
   TEST_ASSERT_EQUAL_UINT32(1, series.size());
 }
 
-void test_function_statistics_simple(void)
+void test_function_timeseries_simple(void)
 {
   Timeseries series(8);
   series.push(0, 0);
@@ -38,7 +38,7 @@ void test_function_statistics_simple(void)
   TEST_ASSERT_EQUAL_UINT32(2, series.size());
 }
 
-void test_function_statistics_limiter(void)
+void test_function_timeseries_limiter(void)
 {
   Timeseries series(4);
   series.push(0, 0);
@@ -53,13 +53,13 @@ void test_function_statistics_limiter(void)
   TEST_ASSERT_EQUAL_FLOAT_MESSAGE(3.5, series.mean(), "series.mean()");
   TEST_ASSERT_EQUAL_UINT32(4, series.size());
 
-  TEST_ASSERT_EQUAL_INT32(2, series.data.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).time);
   TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).value);
-  TEST_ASSERT_EQUAL_INT32(5, series.data.at(3).time);
+  TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(3).time);
   TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(3).value);
 }
 
-void test_function_statistics_huge(void)
+void test_function_timeseries_huge(void)
 {
   int maxEntries = 20000;
 #ifdef ARDUINO
@@ -84,7 +84,7 @@ void test_function_statistics_huge(void)
 #endif
 }
 
-void test_function_statistics_rdp_synth1(void)
+void test_function_timeseries_rdp_synth1(void)
 {
   Timeseries series;
   vector<Point>::const_iterator i;
@@ -101,14 +101,14 @@ void test_function_statistics_rdp_synth1(void)
 
   TEST_ASSERT_EQUAL_INT32_MESSAGE(2, pointListOut.size(), "pointListOut.size()");
 
-  TEST_ASSERT_EQUAL_INT32(1, pointListOut.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(1., pointListOut.at(0).time);
   TEST_ASSERT_EQUAL_FLOAT(1., pointListOut.at(0).value);
 
-  TEST_ASSERT_EQUAL_INT32(4, pointListOut.at(1).time);
-  TEST_ASSERT_EQUAL_FLOAT(4, pointListOut.at(1).value);
+  TEST_ASSERT_EQUAL_FLOAT(4., pointListOut.at(1).time);
+  TEST_ASSERT_EQUAL_FLOAT(4., pointListOut.at(1).value);
 }
 
-void test_function_statistics_rdp_synth2(void)
+void test_function_timeseries_rdp_synth2(void)
 {
   Timeseries series;
   vector<Point>::const_iterator i;
@@ -125,18 +125,18 @@ void test_function_statistics_rdp_synth2(void)
 
   TEST_ASSERT_EQUAL_INT32_MESSAGE(3, pointListOut.size(), "pointListOut.size()");
 
-  TEST_ASSERT_EQUAL_INT32(5, pointListOut.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(5., pointListOut.at(0).time);
   TEST_ASSERT_EQUAL_FLOAT(0., pointListOut.at(0).value);
 
-  TEST_ASSERT_EQUAL_INT32(3, pointListOut.at(1).time);
-  TEST_ASSERT_EQUAL_FLOAT(0, pointListOut.at(1).value);
+  TEST_ASSERT_EQUAL_FLOAT(3., pointListOut.at(1).time);
+  TEST_ASSERT_EQUAL_FLOAT(0., pointListOut.at(1).value);
 
-  TEST_ASSERT_EQUAL_INT32(3, pointListOut.at(2).time);
-  TEST_ASSERT_EQUAL_FLOAT(2, pointListOut.at(2).value);
+  TEST_ASSERT_EQUAL_FLOAT(3., pointListOut.at(2).time);
+  TEST_ASSERT_EQUAL_FLOAT(2., pointListOut.at(2).value);
 }
 
 // from https://github.com/LukaszWiktor/series-reducer
-void test_function_statistics_rdp_math(void)
+void test_function_timeseries_rdp_math(void)
 {
   Timeseries series;
   vector<Point>::const_iterator i;
@@ -148,7 +148,7 @@ void test_function_statistics_rdp_math(void)
 
   for (uint32_t x = 0; x <= 80; x++)
   {
-    examplePoint.push_back(Point({x, float(cos((float(x) / 20.) * (float(x) / 20.) - 1.)) * float(20.)}));
+    examplePoint.push_back(Point({float(x), float(cos((float(x) / 20.) * (float(x) / 20.) - 1.)) * float(20.)}));
     exampleFlat.push_back(cos((float(x) / 20.) * (float(x) / 20.) - 1) * 20);
   }
 
@@ -168,7 +168,7 @@ void test_function_statistics_rdp_math(void)
   TEST_ASSERT_EQUAL_INT32_MESSAGE(39, pointListOut.size(), "pointListOut.size()");
 }
 
-void test_function_statistics_compact_math(void)
+void test_function_timeseries_compact_math(void)
 {
   Timeseries series(256);
   float_vec_t exampleFlat;
@@ -195,7 +195,7 @@ void test_function_statistics_compact_math(void)
   TEST_ASSERT_EQUAL_INT32_MESSAGE(39, series.data.size(), "series.data.size()");
 }
 
-void test_function_statistics_compact_throw(void)
+void test_function_timeseries_compact_throw(void)
 {
   Timeseries series;
   series.push(0, 0);
@@ -204,7 +204,7 @@ void test_function_statistics_compact_throw(void)
   TEST_ASSERT_EQUAL_INT32_MESSAGE(1, series.data.size(), "series.data.size()");
 }
 
-void test_function_statistics_compact_huge(void)
+void test_function_timeseries_compact_huge(void)
 {
   try
   {
@@ -217,9 +217,9 @@ void test_function_statistics_compact_huge(void)
     }
     TEST_ASSERT_EQUAL_INT32_MESSAGE(2, series.data.size(), "series.data.size()");
 
-    TEST_ASSERT_EQUAL_INT32(0, series.data.front().time);
+    TEST_ASSERT_EQUAL_FLOAT(0., series.data.front().time);
     TEST_ASSERT_EQUAL_FLOAT(1., series.data.front().value);
-    TEST_ASSERT_EQUAL_INT32(99999, series.data.back().time);
+    TEST_ASSERT_EQUAL_FLOAT(99999., series.data.back().time);
     TEST_ASSERT_EQUAL_FLOAT(1., series.data.back().value);
   }
   catch (const std::exception &e)
@@ -232,7 +232,7 @@ void test_function_statistics_compact_huge(void)
   }
 }
 
-void test_function_statistics_trim_simple(void)
+void test_function_timeseries_trim_simple(void)
 {
   Timeseries series(10);
   series.push(0, 0);
@@ -247,13 +247,13 @@ void test_function_statistics_trim_simple(void)
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(2, removed, "removed");
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(4, series.size(), "size()");
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(8, series.capacity(), "capacity()");
-  TEST_ASSERT_EQUAL_INT32(2, series.data.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).time);
   TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).value);
-  TEST_ASSERT_EQUAL_INT32(5, series.data.at(3).time);
+  TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(3).time);
   TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(3).value);
 }
 
-void test_function_statistics_trim_none(void)
+void test_function_timeseries_trim_none(void)
 {
   Timeseries series(10);
   series.push(0, 0);
@@ -269,13 +269,13 @@ void test_function_statistics_trim_none(void)
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(0, removed, "removed");
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(6, series.size(), "size()");
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(8, series.capacity(), "capacity() after trim()");
-  TEST_ASSERT_EQUAL_INT32(0, series.data.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(0., series.data.at(0).time);
   TEST_ASSERT_EQUAL_FLOAT(0., series.data.at(0).value);
-  TEST_ASSERT_EQUAL_INT32(5, series.data.at(5).time);
+  TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(5).time);
   TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(5).value);
 }
 
-void test_function_statistics_trim_compact_simple(void)
+void test_function_timeseries_trim_compact_simple(void)
 {
   Timeseries series(10);
   series.push(0, 0);
@@ -291,29 +291,46 @@ void test_function_statistics_trim_compact_simple(void)
   bool compactResult = series.compact();
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(2, series.size(), "size()");
   TEST_ASSERT_EQUAL_UINT32_MESSAGE(2, series.capacity(), "capacity()");
-  TEST_ASSERT_EQUAL_INT32(2, series.data.at(0).time);
+  TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).time);
   TEST_ASSERT_EQUAL_FLOAT(2., series.data.at(0).value);
-  TEST_ASSERT_EQUAL_INT32(5, series.data.at(1).time);
+  TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(1).time);
   TEST_ASSERT_EQUAL_FLOAT(5., series.data.at(1).value);
+}
+
+void test_function_timeseries_spline_simple(void)
+{
+  Timeseries series(10);
+  series.push(0, 0);
+  series.push(1, 2);
+  series.push(2, 1);
+  series.push(3, 4);
+  series.push(4, 1);
+  series.push(5, 5);
+
+  TEST_ASSERT_EQUAL_UINT32(6, series.size());
+  series.computeMonotoneCubicSpline();
+  
+
 }
 
 void process(void)
 {
   UNITY_BEGIN();
-  RUN_TEST(test_function_statistics_initial);
-  RUN_TEST(test_function_statistics_single);
-  RUN_TEST(test_function_statistics_simple);
-  RUN_TEST(test_function_statistics_limiter);
-  RUN_TEST(test_function_statistics_huge);
-  RUN_TEST(test_function_statistics_rdp_synth1);
-  RUN_TEST(test_function_statistics_rdp_synth2);
-  RUN_TEST(test_function_statistics_rdp_math);
-  RUN_TEST(test_function_statistics_compact_math);
-  RUN_TEST(test_function_statistics_compact_throw);
-  RUN_TEST(test_function_statistics_compact_huge);
-  RUN_TEST(test_function_statistics_trim_simple);
-  RUN_TEST(test_function_statistics_trim_none);
-  RUN_TEST(test_function_statistics_trim_compact_simple);
+  RUN_TEST(test_function_timeseries_initial);
+  RUN_TEST(test_function_timeseries_single);
+  RUN_TEST(test_function_timeseries_simple);
+  RUN_TEST(test_function_timeseries_limiter);
+  RUN_TEST(test_function_timeseries_huge);
+  RUN_TEST(test_function_timeseries_rdp_synth1);
+  RUN_TEST(test_function_timeseries_rdp_synth2);
+  RUN_TEST(test_function_timeseries_rdp_math);
+  RUN_TEST(test_function_timeseries_compact_math);
+  RUN_TEST(test_function_timeseries_compact_throw);
+  RUN_TEST(test_function_timeseries_compact_huge);
+  RUN_TEST(test_function_timeseries_trim_simple);
+  RUN_TEST(test_function_timeseries_trim_none);
+  RUN_TEST(test_function_timeseries_trim_compact_simple);
+  RUN_TEST(test_function_timeseries_spline_simple);
   UNITY_END();
 }
 
