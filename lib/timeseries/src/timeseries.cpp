@@ -27,12 +27,13 @@ bool Timeseries::push(float timestamp, float value)
 
     id++;
   }
+  // this could be out-of-memory situations or the block size is too big to be allocated
   catch (const exception &e)
   {
 #ifdef ARDUINO
-    Serial.printf("[ ERROR ] Statistics::push(): %s\n", e.what());
+    Serial.printf("[ ERROR ] Timeseries::push(): %s\n", e.what());
 #else
-    printf("Error in Statistics::push(): %s\n", e.what());
+    printf("Error in Timeseries::push(): %s\n", e.what());
 #endif
     return false;
   }
@@ -46,10 +47,8 @@ void Timeseries::updateStats()
   max = -1e12;
   for (Point &p : data)
   {
-    {
-      min = p.value < min ? p.value : min;
-      max = p.value > max ? p.value : max;
-    }
+    min = p.value < min ? p.value : min;
+    max = p.value > max ? p.value : max;
   }
 }
 
@@ -218,23 +217,25 @@ int32_t Timeseries::trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds)
   return removedEntries;
 }
 
+/****************
+ * A simple sliding window averaging function
+ * @param samples the resulting window size is 2 * samples + 1
+ */
 void Timeseries::movingAverage(int32_t samples)
 {
   vector<Point> tmp = data;
-  float div = 1;
+  float div = 1.;
   try
   {
     for (int32_t i = 0; i < data.size(); i++)
     {
-      div = 1;
+      div = 1.;
       for (int32_t j = -samples; j <= samples; j++)
       {
-        if ((j != 0) /*&& ((i + j) >= 0) && ((i + j) < data.size())*/)
+        if (j != 0)
         {
-          // data.at(i).time += tmp.at(i + j).time;
-          // data.at(i).value += tmp.at(i + j).value;
-          data.at(i).time += tmp.at(std::min(std::max(i + j,0), int(data.size()-1))).time;
-          data.at(i).value += tmp.at(std::min(std::max(i + j,0), int(data.size()-1))).value;
+          data.at(i).time += tmp.at(std::min(std::max(i + j, 0), int(data.size() - 1))).time;
+          data.at(i).value += tmp.at(std::min(std::max(i + j, 0), int(data.size() - 1))).value;
           div += 1;
         }
       }
