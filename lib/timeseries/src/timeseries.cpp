@@ -49,6 +49,19 @@ bool Timeseries::push(uint32_t timestamp, float value)
   return true;
 }
 
+void Timeseries::updateStats()
+{
+      min = 1e12;
+      max = -1e12;
+      float val = 0;
+      for (PointIterator i = data.begin(); i != data.end(); ++i)
+      {
+        val = float(Point(*i).value);
+        min = val < min ? val : min;
+        max = val > max ? val : max;
+      }  
+}
+
 float Timeseries::mean()
 {
   float mean = 0;
@@ -218,7 +231,7 @@ float Timeseries::gauss(float sigma, float x)
 {
   float expVal = -1 * (x * x) / (2 * sigma * sigma);
   float divider = 2 * PI * sigma * sigma;
-  return exp(expVal)/divider;
+  return exp(expVal) / divider;
 }
 
 void Timeseries::calulateKernel(int samples, float sigma)
@@ -265,27 +278,28 @@ void Timeseries::calulateKernel(int samples, float sigma)
     i /= sum;
 }
 
-
-void Timeseries::applyFilter(uint8_t samples, float sigma)
+void Timeseries::applyFilter(int32_t samples)
 {
-  vector<Point> out;
-
-    calulateKernel(samples, sigma);
-    int32_t sampleSide = samples / 2;
-    uint32_t ubound = data.size();
-    for (uint32_t i = 0; i < ubound; i++) {
-        float sample = 0;
-        int32_t sampleCtr = 0;
-        for (long j = i - sampleSide; j <= i + sampleSide; j++) {
-            if (j > 0 && j < ubound) {
-                int32_t sampleWeightIndex = sampleSide + (j - i);
-                sample += kernel[sampleWeightIndex] * data[j].value;
-                sampleCtr++;
-            }
-        }
-        float smoothed = sample / (float)sampleCtr;
-        out.push_back(Point({data.at(i).time, smoothed}));
+  vector<Point> tmp = data;
+  try
+  {
+    for (int32_t i = 0; i < data.size(); i++)
+    {
+      for (int32_t j = -samples; j <= samples; j++)
+      {
+        data.at(i).time += tmp.at(std::min(std::max(i + j, 0), int32_t(data.size() - 1))).time;
+        data.at(i).value += tmp.at(std::min(std::max(i + j, 0), int32_t(data.size() - 1))).value;
+      }
+      data.at(i).time /= float(samples) * 2 + 1;
+      data.at(i).value /= float(samples) * 2 + 1;
     }
-
-  data.assign(out.begin(), out.end());
+  }
+  catch (const std::exception &e)
+  {
+#ifdef ARDUINO
+    Serial.printf("[ ERROR ] Timeseries::applyFilter(): %s\n", e.what());
+#else
+    printf("Error in Timeseries::applyFilter(): %s\n", e.what());
+#endif
+  }
 }

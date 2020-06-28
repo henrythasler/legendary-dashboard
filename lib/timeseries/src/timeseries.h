@@ -6,6 +6,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <sys/time.h>
+#include <algorithm> 
 
 #ifdef ARDUINO
 #include <Arduino.h>
@@ -39,6 +40,7 @@ public:
   Timeseries(uint32_t maxLength = 32);
 
   bool push(uint32_t timestamp, float value);
+  void updateStats(void);
   uint32_t size();
   uint32_t capacity();
   float mean();
@@ -50,6 +52,6 @@ public:
 
   float gauss(float sigma, float x);
   void calulateKernel(int samples, float sigma);
-  void applyFilter(uint8_t samples=5, float sigma=1.0);
+  void applyFilter(int32_t samples=5);
 };
 #endif

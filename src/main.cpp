@@ -153,90 +153,126 @@ void updateScreen()
   // Temperature Demo
   display.fillScreen(WHITE);
 
-  display.drawBitmap(giftRed, 0, 0, 120, 120, COLOR, display.bm_invert);
-  display.drawBitmap(giftBlack, 0, 0, 120, 120, BLACK, display.bm_invert | display.bm_transparent);
+  // Timeseries mod(5000U);
+  // mod.data.assign(tempStats.data.begin(), tempStats.data.end());
+  // mod.updateStats();
+  // mod.applyFilter(5);
+  // chart.lineChart(&display, &tempStats, 0, 0, 400, 300, GxEPD_RED);
+  // chart.lineChart(&display, &mod, 0,0,400,300, GxEPD_BLACK, true);  
 
-  // Date
-  display.setFont(&FreeSansBold18pt7b);
-  display.setTextColor(COLOR);
-  display.setCursor(160, 45);
-  if (currentYear == 0)
-    display.printf("--.--.----");
-  else
-    display.printf("%02d.%02d.%04d", currentDay, currentMonth, currentYear);
-
-  // Udate Time
-  display.setFont(&FreeSansBold9pt7b);
-  display.setTextColor(BLACK);
-  display.setCursor(160, 65);
-  if (currentYear == 0)
-    display.printf("Last updated: --:--:--");
-  else
-    display.printf("Last updated: %02d:%02d:%02d", currentHour, currentMin, currentSec);
-
-  // Signal strength
-  chart.signalBars(&display, currentSignalStrength, 345, 10, 5, 7, 40, 5, 3, BLACK, COLOR);
-
-  // Uptime and Memory stats
-  display.setFont(&Org_01);
-  display.setTextColor(BLACK);
-  display.setCursor(0, 290);
-  display.printf("up: %us\nFree: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
-                 uptime.getSeconds(),
-                 ESP.getFreeHeap() / 1024,
-                 ESP.getMaxAllocHeap() / 1024,
-                 tempStats.size(),
-                 sizeof(tempStats.data) + sizeof(Point) * tempStats.data.capacity(),
-                 humStats.size(),
-                 sizeof(humStats.data) + sizeof(Point) * humStats.data.capacity(),
-                 pressStats.size(),
-                 sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity());
-
-  // Linecharts
-  // Chart Title
-  display.setFont(&FreeSans12pt7b);
-  display.setTextColor(BLACK);
-  display.setCursor(0, 145);
-  display.printf("%.1f C", currentTemperatureCelsius);
-  display.setCursor(135, 145);
-  display.printf("%.0f %%", currentHumidityPercent);
-  display.setCursor(270, 145);
-  display.printf("%.0f hPa", currentPressurePascal / 100);
-
-  // Y-Axis Labels
-  display.setFont(&Org_01);
-  display.setTextColor(BLACK);
-  display.setCursor(2, 155);
-  display.printf("%.1f", tempStats.max);
-  display.setCursor(2, 249);
-  display.printf("%.1f", tempStats.min);
-
-  display.setCursor(135, 155);
-  display.printf("%.0f", humStats.max);
-  display.setCursor(135, 249);
-  display.printf("%.0f", humStats.min);
-
-  display.setCursor(268, 155);
-  display.printf("%.1f", pressStats.max);
-  display.setCursor(268, 249);
-  display.printf("%.1f", pressStats.min);
-
-  // Frame
-  display.drawFastHLine(0, 149, 400, BLACK);
-  display.drawFastHLine(0, 251, 400, BLACK);
-  display.drawFastVLine(133, 149, 102, BLACK);
-  display.drawFastVLine(266, 149, 102, BLACK);
-
-  // Charts
-  chart.lineChart(&display, &tempStats, 0, 150, 130, 100, BLACK);
-  chart.lineChart(&display, &humStats, 135, 150, 130, 100, BLACK);
-  chart.lineChart(&display, &pressStats, 270, 150, 130, 100, BLACK);
-
-  if (!((counter300s + 1) % 10))
+  Timeseries dampedCosine(100), mod(100);
+  for (int x = 0; x < 100; x+=random(5))
   {
-    display.drawBitmap(bsodRed, 0, 0, 400, 400, COLOR, display.bm_invert);
-    display.drawBitmap(bsodBlack, 0, 0, 400, 300, BLACK, display.bm_invert | display.bm_transparent);
+    dampedCosine.push(x, exp(-float(x)/50.)*cos(float(x)/10.)*30+float(random(10))-5.);
   }
+  mod.data.assign(dampedCosine.data.begin(), dampedCosine.data.end());
+  mod.updateStats();
+  mod.applyFilter(3);
+  chart.lineChart(&display, &dampedCosine, 5, 5, 190, 140, GxEPD_RED);
+  chart.lineChart(&display, &mod, 5, 5, 190, 140, GxEPD_BLACK, true);
+
+  mod.data.assign(dampedCosine.data.begin(), dampedCosine.data.end());
+  mod.updateStats();
+  mod.applyFilter(5);
+  chart.lineChart(&display, &dampedCosine, 205, 5, 190, 140, GxEPD_RED);
+  chart.lineChart(&display, &mod, 205, 5, 190, 140, GxEPD_BLACK, true);
+
+  mod.data.assign(dampedCosine.data.begin(), dampedCosine.data.end());
+  mod.updateStats();
+  mod.applyFilter(9);
+  chart.lineChart(&display, &dampedCosine, 5, 155, 190, 140, GxEPD_RED);
+  chart.lineChart(&display, &mod, 5, 155, 190, 140, GxEPD_BLACK, true);
+
+  mod.data.assign(dampedCosine.data.begin(), dampedCosine.data.end());
+  mod.updateStats();
+  mod.applyFilter(15);
+  chart.lineChart(&display, &dampedCosine, 205, 155, 190, 140, GxEPD_RED);
+  chart.lineChart(&display, &mod, 205, 155, 190, 140, GxEPD_BLACK, true);
+
+  // display.drawBitmap(giftRed, 0, 0, 120, 120, COLOR, display.bm_invert);
+  // display.drawBitmap(giftBlack, 0, 0, 120, 120, BLACK, display.bm_invert | display.bm_transparent);
+
+  // // Date
+  // display.setFont(&FreeSansBold18pt7b);
+  // display.setTextColor(COLOR);
+  // display.setCursor(160, 45);
+  // if (currentYear == 0)
+  //   display.printf("--.--.----");
+  // else
+  //   display.printf("%02d.%02d.%04d", currentDay, currentMonth, currentYear);
+
+  // // Udate Time
+  // display.setFont(&FreeSansBold9pt7b);
+  // display.setTextColor(BLACK);
+  // display.setCursor(160, 65);
+  // if (currentYear == 0)
+  //   display.printf("Last updated: --:--:--");
+  // else
+  //   display.printf("Last updated: %02d:%02d:%02d", currentHour, currentMin, currentSec);
+
+  // // Signal strength
+  // chart.signalBars(&display, currentSignalStrength, 345, 10, 5, 7, 40, 5, 3, BLACK, COLOR);
+
+  // // Uptime and Memory stats
+  // display.setFont(&Org_01);
+  // display.setTextColor(BLACK);
+  // display.setCursor(0, 290);
+  // display.printf("up: %us\nFree: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
+  //                uptime.getSeconds(),
+  //                ESP.getFreeHeap() / 1024,
+  //                ESP.getMaxAllocHeap() / 1024,
+  //                tempStats.size(),
+  //                sizeof(tempStats.data) + sizeof(Point) * tempStats.data.capacity(),
+  //                humStats.size(),
+  //                sizeof(humStats.data) + sizeof(Point) * humStats.data.capacity(),
+  //                pressStats.size(),
+  //                sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity());
+
+  // // Linecharts
+  // // Chart Title
+  // display.setFont(&FreeSans12pt7b);
+  // display.setTextColor(BLACK);
+  // display.setCursor(0, 145);
+  // display.printf("%.1f C", currentTemperatureCelsius);
+  // display.setCursor(135, 145);
+  // display.printf("%.0f %%", currentHumidityPercent);
+  // display.setCursor(270, 145);
+  // display.printf("%.0f hPa", currentPressurePascal / 100);
+
+  // // Y-Axis Labels
+  // display.setFont(&Org_01);
+  // display.setTextColor(BLACK);
+  // display.setCursor(2, 155);
+  // display.printf("%.1f", tempStats.max);
+  // display.setCursor(2, 249);
+  // display.printf("%.1f", tempStats.min);
+
+  // display.setCursor(135, 155);
+  // display.printf("%.0f", humStats.max);
+  // display.setCursor(135, 249);
+  // display.printf("%.0f", humStats.min);
+
+  // display.setCursor(268, 155);
+  // display.printf("%.1f", pressStats.max);
+  // display.setCursor(268, 249);
+  // display.printf("%.1f", pressStats.min);
+
+  // // Frame
+  // display.drawFastHLine(0, 149, 400, BLACK);
+  // display.drawFastHLine(0, 251, 400, BLACK);
+  // display.drawFastVLine(133, 149, 102, BLACK);
+  // display.drawFastVLine(266, 149, 102, BLACK);
+
+  // // Charts
+  // chart.lineChart(&display, &tempStats, 0, 150, 130, 100, BLACK);
+  // chart.lineChart(&display, &humStats, 135, 150, 130, 100, BLACK);
+  // chart.lineChart(&display, &pressStats, 270, 150, 130, 100, BLACK);
+
+  // if (!((counter300s + 1) % 10))
+  // {
+  //   display.drawBitmap(bsodRed, 0, 0, 400, 400, COLOR, display.bm_invert);
+  //   display.drawBitmap(bsodBlack, 0, 0, 400, 300, BLACK, display.bm_invert | display.bm_transparent);
+  // }
 
   display.update();
 }
@@ -312,40 +348,40 @@ void setup()
   delay(100);
   initStage++;
 
-  // Initialize SIM800L Module
-  // Set-up modem reset, enable, power pins
-  Serial.println("[  INIT  ] modem power-on");
-  pinMode(MODEM_PWKEY, OUTPUT);
-  pinMode(MODEM_RST, OUTPUT);
-  pinMode(MODEM_POWER_ON, OUTPUT);
-  digitalWrite(MODEM_PWKEY, LOW);
-  digitalWrite(MODEM_RST, HIGH);
-  digitalWrite(MODEM_POWER_ON, HIGH);
+  // // Initialize SIM800L Module
+  // // Set-up modem reset, enable, power pins
+  // Serial.println("[  INIT  ] modem power-on");
+  // pinMode(MODEM_PWKEY, OUTPUT);
+  // pinMode(MODEM_RST, OUTPUT);
+  // pinMode(MODEM_POWER_ON, OUTPUT);
+  // digitalWrite(MODEM_PWKEY, LOW);
+  // digitalWrite(MODEM_RST, HIGH);
+  // digitalWrite(MODEM_POWER_ON, HIGH);
 
-  // Set GSM module baud rate and UART pins
-  Serial.println("[  INIT  ] Initializing serial interface to modem...");
-  SerialAT.begin(115200, SERIAL_8N1, MODEM_RX, MODEM_TX);
-  initStage++;
+  // // Set GSM module baud rate and UART pins
+  // Serial.println("[  INIT  ] Initializing serial interface to modem...");
+  // SerialAT.begin(115200, SERIAL_8N1, MODEM_RX, MODEM_TX);
+  // initStage++;
 
-  // Restart takes quite some time
-  // use modem.init() if you don't need the complete restart
-  Serial.println("[  INIT  ] Initializing modem...");
-  modem.restart();
+  // // Restart takes quite some time
+  // // use modem.init() if you don't need the complete restart
+  // Serial.println("[  INIT  ] Initializing modem...");
+  // modem.restart();
 
-  String name = modem.getModemName();
-  Serial.print("[  INIT  ] Modem Name: ");
-  Serial.print(name);
-  String modemInfo = modem.getModemInfo();
-  Serial.print(", Modem Info: ");
-  Serial.println(modemInfo);
-  initStage++;
+  // String name = modem.getModemName();
+  // Serial.print("[  INIT  ] Modem Name: ");
+  // Serial.print(name);
+  // String modemInfo = modem.getModemInfo();
+  // Serial.print(", Modem Info: ");
+  // Serial.println(modemInfo);
+  // initStage++;
 
   initStage++; // Init complete
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
 
   // delay to allow modem connect to network
-  delay(4000);
+  // delay(4000);
 }
 
 /**
@@ -407,7 +443,7 @@ void loop()
     }
 
     // update modem Information every time display is updated, to get current timestamp
-    updateModemInfo();
+    // updateModemInfo();
 
     if (enableDisplay)
     {
