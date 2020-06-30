@@ -400,7 +400,9 @@ void loop()
       humStats.trim(uptime.getSeconds(), 7 * 24 * 3600);
       pressStats.trim(uptime.getSeconds(), 7 * 24 * 3600);
 
-      // and apply compression (Ramer-Douglas-Peucker)
+      // FIXME: Filter high-frequency noise somehow
+
+      // apply compression (Ramer-Douglas-Peucker)
       tempStats.compact(0.05);
       humStats.compact(0.2);
       pressStats.compact(0.05);

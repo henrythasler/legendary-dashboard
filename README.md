@@ -124,3 +124,5 @@ $ platformio remote agent start 2>&1 >/dev/null &
 ### Artwork
 
 - [Emir Haveric BMW X2 Campaign](https://www.kleinphotographen.com/news/emir-haveric-bmw-x2-campaign/1383)
+- [Overloading operators in typedef structs (c++)](https://stackoverflow.com/questions/14047191/overloading-operators-in-typedef-structs-c)
+- [Gaussian Filter generation using C/C++](https://www.programming-techniques.com/2013/02/gaussian-filter-generation-using-cc.html)

@@ -6,6 +6,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <sys/time.h>
+#include <algorithm>
 
 #ifdef ARDUINO
 #include <Arduino.h>
@@ -13,13 +14,37 @@
 
 using namespace std;
 
-typedef struct
+struct Point
 {
-  uint32_t time;
+  float time;
   float value;
-} Point;
+
+  Point(float time = 0, float value = 0)
+      : time(time), value(value)
+  {
+  }
+
+  Point operator+(const Point &a) const
+  {
+    return {a.time + time, a.value + value};
+  }
+
+  Point operator-(const Point &a) const
+  {
+    return {a.time - time, a.value - value};
+  }
+
+  Point operator*(const Point &a) const
+  {
+    return {a.time * time, a.value * value};
+  }
+};
 
 typedef vector<Point>::const_iterator PointIterator;
+
+#ifndef PI
+#define PI 3.14159265358979323846 /* pi */
+#endif
 
 class Timeseries
 {
@@ -27,13 +52,13 @@ public:
   float min;
   float max;
   uint32_t maxHistoryLength;
-  uint32_t id = 0;
 
   vector<Point> data;
 
   Timeseries(uint32_t maxLength = 32);
 
-  bool push(uint32_t timestamp, float value);
+  void updateStats(void);
+  bool push(float timestamp, float value);
   uint32_t size();
   uint32_t capacity();
   float mean();
@@ -42,5 +67,7 @@ public:
 
   float perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd);
   void ramerDouglasPeucker(const vector<Point> &pointList, float epsilon, vector<Point> &out);
+
+  void movingAverage(int32_t samples = 5);
 };
 #endif
