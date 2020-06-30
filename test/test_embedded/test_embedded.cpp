@@ -38,6 +38,14 @@ void test_modem_connection(void)
 
     String name = modem.getModemName();
     TEST_ASSERT_NOT_NULL(name);
+
+    // modem.gprsConnect(apn, NULL, NULL);
+    if (!modem.waitForNetwork(60000L)) {
+        Serial.write("nope, no network...");
+        TEST_FAIL_MESSAGE("no network");
+        return;
+    }
+    TEST_ASSERT_TRUE(modem.isNetworkConnected());
 }
 
 
