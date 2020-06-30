@@ -78,7 +78,7 @@ $ platformio remote agent start 2>&1 >/dev/null &
 - Code output format: `Arduino Code`
 - Draw mode: `Horizontal - 1 bit per pixel`
 - Press: `Generate code`
-- copy the **second** array into your project
+- copy the generated code into your project
 
 ## References
 
@@ -120,5 +120,9 @@ $ platformio remote agent start 2>&1 >/dev/null &
 
 - [Ramer-Douglas-Peucker line simplification](https://rosettacode.org/wiki/Ramer-Douglas-Peucker_line_simplification#C.2B.2B)
 - [Robust endianness conversion](https://mklimenko.github.io/english/2018/08/22/robust-endian-swap/)
+
+### Artwork
+
+- [Emir Haveric BMW X2 Campaign](https://www.kleinphotographen.com/news/emir-haveric-bmw-x2-campaign/1383)
 - [Overloading operators in typedef structs (c++)](https://stackoverflow.com/questions/14047191/overloading-operators-in-typedef-structs-c)
 - [Gaussian Filter generation using C/C++](https://www.programming-techniques.com/2013/02/gaussian-filter-generation-using-cc.html)
