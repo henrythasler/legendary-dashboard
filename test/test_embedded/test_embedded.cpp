@@ -11,6 +11,36 @@
 // // clean stuff up here
 // }
 
+// Modem pinning
+#define MODEM_RST (5)
+#define MODEM_PWKEY (4)
+#define MODEM_POWER_ON (23)
+#define MODEM_TX (27)
+#define MODEM_RX (26)
+
+// Configure TinyGSM library
+#define TINY_GSM_MODEM_SIM800     // Modem is SIM800
+#define TINY_GSM_RX_BUFFER (1024) // Set RX buffer to 1Kb
+#include <TinyGsmClient.h>
+
+// SIM800L includes, defines and variables
+#define SerialMon Serial
+#define SerialAT Serial1
+// const char simPIN[]   = "1234"; // SIM card PIN code, if any
+#define TINY_GSM_DEBUG SerialMon
+
+TinyGsm modem(SerialAT);
+
+void test_modem_connection(void)
+{
+    // bool init = modem.init();
+    // TEST_ASSERT_EQUAL(init, true);
+
+    String name = modem.getModemName();
+    TEST_ASSERT_NOT_NULL(name);
+}
+
+
 void test_led_builtin_pin_number(void)
 {
     TEST_ASSERT_EQUAL(LED_BUILTIN, 13);
@@ -38,6 +68,15 @@ void setup()
 
     RUN_TEST(test_led_state_high);
     RUN_TEST(test_led_state_low);    
+
+    // reset modem, just for the lulz
+    digitalWrite(MODEM_RST, HIGH);
+    delay(5000);
+    digitalWrite(MODEM_RST, LOW);
+    delay(1300);
+    digitalWrite(MODEM_RST, HIGH);
+
+    RUN_TEST(test_modem_connection);
 
     UNITY_END();
 }
