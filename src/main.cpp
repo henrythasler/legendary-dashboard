@@ -1,3 +1,5 @@
+using namespace std;
+
 #include <Arduino.h>
 
 #define LED_BUILTIN (13) // LED is connected to IO13
@@ -153,8 +155,8 @@ void updateScreen()
   // Temperature Demo
   display.fillScreen(WHITE);
 
-  display.drawBitmap(giftRed, 0, 0, 120, 120, COLOR, display.bm_invert);
-  display.drawBitmap(giftBlack, 0, 0, 120, 120, BLACK, display.bm_invert | display.bm_transparent);
+  display.drawBitmap(images.gift.color, 0, 0, 120, 120, COLOR, display.bm_invert);
+  display.drawBitmap(images.gift.black, 0, 0, 120, 120, BLACK, display.bm_invert | display.bm_transparent);
 
   // Date
   display.setFont(&FreeSansBold18pt7b);
@@ -234,8 +236,8 @@ void updateScreen()
 
   if (!((counter300s + 1) % 10))
   {
-    display.drawBitmap(bsodRed, 0, 0, 400, 400, COLOR, display.bm_invert);
-    display.drawBitmap(bsodBlack, 0, 0, 400, 300, BLACK, display.bm_invert | display.bm_transparent);
+    display.drawBitmap(images.yellowScreen.color, 0, 0, 400, 400, COLOR, display.bm_invert);
+    display.drawBitmap(images.yellowScreen.black, 0, 0, 400, 300, BLACK, display.bm_invert | display.bm_transparent);
   }
 
   display.update();

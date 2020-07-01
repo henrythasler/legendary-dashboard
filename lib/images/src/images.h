@@ -5890,5 +5890,21 @@ const unsigned char bsodBlack [] PROGMEM = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 };
 
+struct Image{
+	const uint8_t *color;
+	const uint8_t *black;
+
+  Image(const uint8_t *color, const uint8_t *black)
+      : color(color), black(black)
+  {
+  }	
+};
+
+struct {
+	Image bmw = Image(bmwYellow, bmwBlack);
+	Image bruce = Image(bruceYellow, bruceBlack);
+	Image yellowScreen = Image(bsodRed, bsodBlack);
+	Image gift = Image(giftRed, giftBlack);
+} images;
 
 #endif
