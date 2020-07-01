@@ -26,25 +26,30 @@
 // SIM800L includes, defines and variables
 #define SerialMon Serial
 #define SerialAT Serial1
-// const char simPIN[]   = "1234"; // SIM card PIN code, if any
 #define TINY_GSM_DEBUG SerialMon
 
 TinyGsm modem(SerialAT);
 
+#define GSM_PIN "148348"
+
 void test_modem_connection(void)
 {
-    // bool init = modem.init();
-    // TEST_ASSERT_EQUAL(init, true);
+    if ( modem.getSimStatus() != 3 ) {
+        Serial.println("Unlock SIM");
+        bool sim = modem.simUnlock(GSM_PIN);
+        TEST_ASSERT_TRUE_MESSAGE(sim, "GSM access all areas");    
+    }
 
     String name = modem.getModemName();
-    TEST_ASSERT_NOT_NULL(name);
+    TEST_ASSERT_NOT_NULL_MESSAGE(name, "it has a name");
+
+    bool connect = modem.gprsConnect("iot.1nce.com", "", "");
+    TEST_ASSERT_TRUE_MESSAGE(connect, "connect GPRS");
 
     // modem.gprsConnect(apn, NULL, NULL);
-    if (!modem.waitForNetwork(60000L)) {
-        Serial.write("nope, no network...");
-        TEST_FAIL_MESSAGE("no network");
-        return;
-    }
+    bool network = modem.waitForNetwork(60000L);
+    TEST_ASSERT_TRUE_MESSAGE(network, "do network");
+    
     TEST_ASSERT_TRUE(modem.isNetworkConnected());
 }
 
