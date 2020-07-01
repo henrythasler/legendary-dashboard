@@ -34,23 +34,21 @@ TinyGsm modem(SerialAT);
 
 void test_modem_connection(void)
 {
-    if ( modem.getSimStatus() != 3 ) {
-        Serial.println("Unlock SIM");
-        bool sim = modem.simUnlock(GSM_PIN);
-        TEST_ASSERT_TRUE_MESSAGE(sim, "GSM access all areas");    
-    }
+    // if ( modem.getSimStatus() != 3 ) {
+    //     Serial.println("Unlock SIM");
+    //     bool sim = modem.simUnlock(GSM_PIN);
+    //     TEST_ASSERT_TRUE_MESSAGE(sim, "GSM access all areas");    
+    // }
 
     String name = modem.getModemName();
     TEST_ASSERT_NOT_NULL_MESSAGE(name, "it has a name");
 
-    bool connect = modem.gprsConnect("iot.1nce.com", "", "");
+    bool connect = modem.gprsConnect("iot.1nce.net", "", "");
     TEST_ASSERT_TRUE_MESSAGE(connect, "connect GPRS");
 
-    // modem.gprsConnect(apn, NULL, NULL);
     bool network = modem.waitForNetwork(60000L);
-    TEST_ASSERT_TRUE_MESSAGE(network, "do network");
-    
-    TEST_ASSERT_TRUE(modem.isNetworkConnected());
+    TEST_ASSERT_TRUE_MESSAGE(network, "did network");
+    TEST_ASSERT_TRUE_MESSAGE(modem.isNetworkConnected(), "do has network");
 }
 
 
@@ -83,12 +81,17 @@ void setup()
     RUN_TEST(test_led_state_low);    
 
     // reset modem, just for the lulz
+    Serial.println("[  INIT  ] modem power-on");
+    pinMode(MODEM_PWKEY, OUTPUT);
+    pinMode(MODEM_RST, OUTPUT);
+    pinMode(MODEM_POWER_ON, OUTPUT);
+    digitalWrite(MODEM_PWKEY, LOW);
+    delay(2000);
     digitalWrite(MODEM_RST, HIGH);
-    delay(5000);
-    digitalWrite(MODEM_RST, LOW);
-    delay(1300);
-    digitalWrite(MODEM_RST, HIGH);
+    delay(2000);
+    digitalWrite(MODEM_POWER_ON, HIGH);
 
+    Serial.println("[  TEST  ] modem test");
     RUN_TEST(test_modem_connection);
 
     UNITY_END();
