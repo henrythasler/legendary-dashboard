@@ -77,12 +77,16 @@ HttpClient http(client, "worldtimeapi.org", 80);
 void test_world_wide_wait(void) {
 
     Serial.println("[  TEST  ] web test");
+    Serial.println("[  TEST  ] worldtimeapi.org:80/api/timezone/Europe/Berlin");
 
     int err = http.get("/api/timezone/Europe/Berlin");
     TEST_ASSERT_EQUAL_MESSAGE(err, 0, "no server conn");
 
     int length = http.contentLength();
-    TEST_ASSERT_GREATER_THAN_MESSAGE(length, 0, "no content");
+    TEST_ASSERT_GREATER_THAN_MESSAGE(0, length, "no content");
+
+    int responseCode = http.responseStatusCode();
+    TEST_ASSERT_INT16_WITHIN_MESSAGE(responseCode, 400, 499, "not a 4xx response");
 
     String body = http.responseBody();
     Serial.println(F("Response:"));
