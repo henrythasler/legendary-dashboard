@@ -74,6 +74,17 @@ Uptime uptime;
 #include <chart.h>
 Chart chart;
 
+// Command Line Interface
+#define LINE_BUF_SIZE 128   //Maximum input string length
+#define ARG_BUF_SIZE 64     //Maximum argument string length
+#define MAX_NUM_ARGS 8      //Maximum number of arguments
+ 
+bool error_flag = false;
+ 
+char line[LINE_BUF_SIZE];
+char args[MAX_NUM_ARGS][ARG_BUF_SIZE];
+
+
 // Global Variables
 float currentTemperatureCelsius = 0;
 float currentHumidityPercent = 0;
@@ -98,149 +109,73 @@ uint32_t counter300s = 0;
 uint32_t counter1h = 0;
 bool enableDisplay = true; // display output can be disabled for testing purposes with this flag
 
-/**
- * Update all information from modem.
- * 
- ******************************************************/
-void updateModemInfo(void)
-{
-  // read current data
-  currentSignalStrength = modem.getSignalQuality();
-  Serial.print("[ MODEM  ] Sigal Quality [0-31]: ");
-  Serial.println(currentSignalStrength);
 
-  if (modem.isNetworkConnected())
-  {
-    modem.getNetworkTime(&currentYear, &currentMonth, &currentDay, &currentHour, &currentMin, &currentSec, &currentTimezone);
-    Serial.printf("[ MODEM  ] Current Network Time (Values) - Year: %d, Month: %02d, Day: %02d, Hour: %02d, Minute: %02d, Second: %02d, Timezone: %.1f\n",
-                  currentYear, currentMonth, currentDay, currentHour, currentMin, currentSec, currentTimezone);
-  }
-  else
-  {
-    Serial.println("[  WARN  ] Network not connected.");
-  }
+int execute(){  
+    Serial.println(line);
+    return 0;
 }
 
-/**
- * Sample measurements from environment sensor.
- * 
- ******************************************************/
-void doMeasurement(void)
-{
-  if (environmentSensorAvailable)
-  {
-    // read current measurements
-    currentTemperatureCelsius = bme.readTemperature();
-    currentHumidityPercent = bme.readHumidity();
-    currentPressurePascal = bme.readPressure() + PRESSURE_MEASUREMENT_CALIBRATION;
-
-    // update statistics for each measurement
-    uint32_t timestamp = uptime.getSeconds();
-    tempStats.push(timestamp, currentTemperatureCelsius);
-    humStats.push(timestamp, currentHumidityPercent);
-    pressStats.push(timestamp, currentPressurePascal / 100.); // use hPa
-  }
-  else
-  {
-    Serial.println("[  WARN  ] Environment sensor not available.");
-  }
+void read_line(){
+    String line_string;
+ 
+    while(!Serial.available());
+ 
+    if(Serial.available()){
+        line_string = Serial.readStringUntil('\n');
+        if(line_string.length() < LINE_BUF_SIZE){
+          line_string.toCharArray(line, LINE_BUF_SIZE);
+          Serial.println(line_string);
+        }
+        else{
+          Serial.println("Input string too long.");
+          error_flag = true;
+        }
+    }
+}
+ 
+void parse_line(){
+    char *argument;
+    int counter = 0;
+ 
+    argument = strtok(line, " ");
+ 
+    while((argument != NULL)){
+        if(counter < MAX_NUM_ARGS){
+            if(strlen(argument) < ARG_BUF_SIZE){
+                strcpy(args[counter],argument);
+                argument = strtok(NULL, " ");
+                counter++;
+            }
+            else{
+                Serial.println("Input string too long.");
+                error_flag = true;
+                break;
+            }
+        }
+        else{
+            break;
+        }
+    }
 }
 
-/**
- * Update the screen
- * 
- ******************************************************/
-void updateScreen()
+void prompt(void)
 {
-  // Temperature Demo
-  display.fillScreen(WHITE);
+  Serial.print("> ");
 
-  display.drawBitmap(images.gift.color, 0, 0, 120, 120, COLOR, display.bm_invert);
-  display.drawBitmap(images.gift.black, 0, 0, 120, 120, BLACK, display.bm_invert | display.bm_transparent);
-
-  // Date
-  display.setFont(&FreeSansBold18pt7b);
-  display.setTextColor(COLOR);
-  display.setCursor(160, 45);
-  if (currentYear == 0)
-    display.printf("--.--.----");
-  else
-    display.printf("%02d.%02d.%04d", currentDay, currentMonth, currentYear);
-
-  // Udate Time
-  display.setFont(&FreeSansBold9pt7b);
-  display.setTextColor(BLACK);
-  display.setCursor(160, 65);
-  if (currentYear == 0)
-    display.printf("Last updated: --:--:--");
-  else
-    display.printf("Last updated: %02d:%02d:%02d", currentHour, currentMin, currentSec);
-
-  // Signal strength
-  chart.signalBars(&display, currentSignalStrength, 345, 10, 5, 7, 40, 5, 3, BLACK, COLOR);
-
-  // Uptime and Memory stats
-  display.setFont(&Org_01);
-  display.setTextColor(BLACK);
-  display.setCursor(0, 290);
-  display.printf("up: %us\nFree: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
-                 uptime.getSeconds(),
-                 ESP.getFreeHeap() / 1024,
-                 ESP.getMaxAllocHeap() / 1024,
-                 tempStats.size(),
-                 sizeof(tempStats.data) + sizeof(Point) * tempStats.data.capacity(),
-                 humStats.size(),
-                 sizeof(humStats.data) + sizeof(Point) * humStats.data.capacity(),
-                 pressStats.size(),
-                 sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity());
-
-  // Linecharts
-  // Chart Title
-  display.setFont(&FreeSans12pt7b);
-  display.setTextColor(BLACK);
-  display.setCursor(0, 145);
-  display.printf("%.1f C", currentTemperatureCelsius);
-  display.setCursor(135, 145);
-  display.printf("%.0f %%", currentHumidityPercent);
-  display.setCursor(270, 145);
-  display.printf("%.0f hPa", currentPressurePascal / 100);
-
-  // Y-Axis Labels
-  display.setFont(&Org_01);
-  display.setTextColor(BLACK);
-  display.setCursor(2, 155);
-  display.printf("%.1f", tempStats.max);
-  display.setCursor(2, 249);
-  display.printf("%.1f", tempStats.min);
-
-  display.setCursor(135, 155);
-  display.printf("%.0f", humStats.max);
-  display.setCursor(135, 249);
-  display.printf("%.0f", humStats.min);
-
-  display.setCursor(268, 155);
-  display.printf("%.1f", pressStats.max);
-  display.setCursor(268, 249);
-  display.printf("%.1f", pressStats.min);
-
-  // Frame
-  display.drawFastHLine(0, 149, 400, BLACK);
-  display.drawFastHLine(0, 251, 400, BLACK);
-  display.drawFastVLine(133, 149, 102, BLACK);
-  display.drawFastVLine(266, 149, 102, BLACK);
-
-  // Charts
-  chart.lineChart(&display, &tempStats, 0, 150, 130, 100, BLACK);
-  chart.lineChart(&display, &humStats, 135, 150, 130, 100, BLACK);
-  chart.lineChart(&display, &pressStats, 270, 150, 130, 100, BLACK);
-
-  if (!((counter300s + 1) % 10))
+  read_line();
+  if (!error_flag)
   {
-    display.drawBitmap(images.yellowScreen.color, 0, 0, 400, 400, COLOR, display.bm_invert);
-    display.drawBitmap(images.yellowScreen.black, 0, 0, 400, 300, BLACK, display.bm_invert | display.bm_transparent);
+    parse_line();
+  }
+  if (!error_flag)
+  {
+    execute();
   }
 
-  display.update();
+  memset(line, 0, LINE_BUF_SIZE);
+  memset(args, 0, sizeof(args[0][0]) * MAX_NUM_ARGS * ARG_BUF_SIZE);
+
+  error_flag = false;
 }
 
 /**
@@ -356,79 +291,5 @@ void setup()
  ******************************************************/
 void loop()
 {
-  // 100ms Tasks
-  if (!(counterBase % (100L / SCHEDULER_MAIN_LOOP_MS)))
-  {
-    digitalWrite(LED_BUILTIN, HIGH); // regularly turn on LED
-  }
-
-  // 500ms Tasks
-  if (!(counterBase % (500L / SCHEDULER_MAIN_LOOP_MS)))
-  {
-  }
-
-  // 2s Tasks
-  if (!(counterBase % (2000L / SCHEDULER_MAIN_LOOP_MS)))
-  {
-    // indicate alive
-    digitalWrite(LED_BUILTIN, LOW);
-  }
-
-  // 30s Tasks
-  if (!(counterBase % (30000L / SCHEDULER_MAIN_LOOP_MS)))
-  {
-    doMeasurement();
-    // memory state
-    Serial.printf("[ MEMORY ] Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B) Uptime: %u s\n",
-                  ESP.getFreeHeap() / 1024,
-                  ESP.getMaxAllocHeap() / 1024,
-                  tempStats.size(),
-                  sizeof(tempStats.data) + sizeof(Point) * tempStats.data.capacity(),
-                  humStats.size(),
-                  sizeof(humStats.data) + sizeof(Point) * humStats.data.capacity(),
-                  pressStats.size(),
-                  sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity(),
-                  uptime.getSeconds());
-  }
-
-  // 300s Tasks
-  // e-Paper Display MUST not be updated more often than every 180s to ensure lifetime function
-  if (!(counterBase % (300000L / SCHEDULER_MAIN_LOOP_MS)))
-  {
-    if (counter300s > 0) // don't trim/compact on startup
-    {
-      // RAM is limited so we cut off the timeseries after x days
-      tempStats.trim(uptime.getSeconds(), 7 * 24 * 3600);
-      humStats.trim(uptime.getSeconds(), 7 * 24 * 3600);
-      pressStats.trim(uptime.getSeconds(), 7 * 24 * 3600);
-
-      // FIXME: Filter high-frequency noise somehow
-
-      // apply compression (Ramer-Douglas-Peucker)
-      tempStats.compact(0.05);
-      humStats.compact(0.2);
-      pressStats.compact(0.05);
-    }
-
-    // update modem Information every time display is updated, to get current timestamp
-    updateModemInfo();
-
-    if (enableDisplay)
-    {
-      Serial.print("[  DISP  ] Updating... ");
-      updateScreen();
-      Serial.println("ok");
-    }
-
-    counter300s++;
-  }
-
-  // 1h Tasks
-  if (!(counterBase % (3600000L / SCHEDULER_MAIN_LOOP_MS)))
-  {
-    counter1h++;
-  }
-
-  delay(SCHEDULER_MAIN_LOOP_MS);
-  counterBase++;
+  prompt();
 }
