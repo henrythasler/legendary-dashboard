@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoHttpClient.h>
 #include <unity.h>
 
 #define LED_BUILTIN (13) // LED is connected to IO13
@@ -35,6 +36,10 @@ TinyGsm modem(SerialAT);
 void test_modem_connection(void)
 {
     Serial.println("[  TEST  ] modem test");
+
+    // Set GSM module baud rate and UART pins
+    Serial.println("[ TEST  ] Initializing serial interface to modem...");
+    SerialAT.begin(115200, SERIAL_8N1, MODEM_RX, MODEM_TX);
     
     // TEST_ASSERT_TRUE_MESSAGE(modem.begin(GSM_PIN), "be gune");
     // TEST_ASSERT_TRUE_MESSAGE(modem.init(GSM_PIN), "init good");    
@@ -47,7 +52,16 @@ void test_modem_connection(void)
 
     String name = modem.getModemName();
     TEST_ASSERT_NOT_NULL_MESSAGE(name, "it has a name");
-    Serial.printf("and %s was its name-o\n", name);
+    Serial.print(name);
+    Serial.println(" was its name-o");
+
+    modem.sendAT(GF("+CCLK?"));
+    TEST_ASSERT_EQUAL_MESSAGE(modem.waitResponse(2000L), 1, "woke clock orange");
+
+    String timedate = modem.stream.readString(); 
+    Serial.print("[ TEST  ] no matter what year, for me it's always ");
+    Serial.println(timedate);
+    modem.waitResponse(); 
 
     bool connect = modem.gprsConnect("iot.1nce.net");
     TEST_ASSERT_TRUE_MESSAGE(connect, "connect GPRS");
@@ -55,6 +69,24 @@ void test_modem_connection(void)
     bool network = modem.waitForNetwork(60000L);
     TEST_ASSERT_TRUE_MESSAGE(network, "did network");
     TEST_ASSERT_TRUE_MESSAGE(modem.isNetworkConnected(), "do has network");
+}
+
+TinyGsmClient client(modem);
+HttpClient http(client, "worldtimeapi.org", 80);
+
+void test_world_wide_wait(void) {
+
+    Serial.println("[  TEST  ] web test");
+
+    int err = http.get("/api/timezone/Europe/Berlin");
+    TEST_ASSERT_EQUAL_MESSAGE(err, 0, "no server conn");
+
+    int length = http.contentLength();
+    TEST_ASSERT_GREATER_THAN_MESSAGE(length, 0, "no content");
+
+    String body = http.responseBody();
+    Serial.println(F("Response:"));
+    Serial.println(body);
 }
 
 
@@ -99,6 +131,7 @@ void setup()
     delay(6000);
 
     RUN_TEST(test_modem_connection);
+    RUN_TEST(test_world_wide_wait);
 
     UNITY_END();
 }
