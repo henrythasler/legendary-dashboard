@@ -84,16 +84,16 @@ void test_world_wide_wait(void) {
 
     int length = http.contentLength();
     TEST_ASSERT_GREATER_THAN_MESSAGE(0, length, "no content");
-    Serial.printf("recvd %d bytes\n", length);
+    Serial.printf("[  TEST  ] recvd %d bytes\n", length);
 
     int responseCode = http.responseStatusCode();
-    Serial.printf("http %d\n", responseCode);
-    TEST_ASSERT_GREATER_OR_EQUAL_INT_MESSAGE(400, responseCode, "not a 4xx response");
-    TEST_ASSERT_LESS_THAN_INT_MESSAGE(500, responseCode, "not a 4xx response");
+    Serial.printf("[  TEST  ] http %d\n", responseCode);
+    TEST_ASSERT_GREATER_OR_EQUAL_MESSAGE(400, responseCode, "not a 4xx response");
+    TEST_ASSERT_LESS_THAN_MESSAGE(500, responseCode, "not a 4xx response");
 
     String body = http.responseBody();
-    Serial.println(F("Response:"));
     Serial.println(body);
+    http.stop();
 }
 
 
@@ -139,6 +139,8 @@ void setup()
 
     RUN_TEST(test_modem_connection);
     RUN_TEST(test_world_wide_wait);
+
+    if (modem.isGprsConnected()) modem.gprsDisconnect();
 
     UNITY_END();
 }
