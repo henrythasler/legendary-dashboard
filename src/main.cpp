@@ -50,12 +50,39 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #define COLOR (0xF800)
 #define HAS_RED_COLOR
 
+// screen positions and text formatting
+#define SMS_X               (130)
+#define SMS_Y               (65)
+#define SMS_LINELENGTH      (34)
+#define SMS_LINES           (3)
+#define SMS_LINEHEIGHT      (12)
+
+#define WISDOM_X            (10)
+#define WISDOM_Y            (118)
+#define WISDOM_LINELENGTH   (55)
+#define WISDOM_LINES        (2)
+#define WISDOM_LINEHEIGHT   (12)
+
+#define SIGBAR_X            (345)
+#define SIGBAR_Y            (10)
+#define SIGBAR_NUMBARS      (5)
+#define SIGBAR_BARWIDTH     (7)
+#define SIGBAR_BARHEIGHT    (40)
+#define SIGBAR_HEIGHTDELTA  (5)
+#define SIGBAR_GAP          (3)
+
+
+
 // FreeFonts from Adafruit_GFX
 #include <Fonts/FreeSansBold9pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeSansBold18pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/Org_01.h>
+#include <orbitron14.h>
+#include <roboto12.h>
+#include <robotobold12.h>
+#include <roboto14.h>
 
 // images
 #include <images.h>
@@ -88,6 +115,10 @@ int currentMin = 0;
 int currentSec = 0;
 float currentTimezone = 0.0;
 
+String smsText = "";
+String smsNumber = "";
+String smsTime = "";
+
 // Track initialisation
 uint32_t initStage = 0;
 
@@ -97,6 +128,211 @@ uint32_t counterBase = 0;
 uint32_t counter300s = 0;
 uint32_t counter1h = 0;
 bool enableDisplay = true; // display output can be disabled for testing purposes with this flag
+
+/**
+ * helper function to send AT Command to modem and write command and result to Monitor
+ * 
+ ******************************************************/
+String sendATcommand(const char *toSend, unsigned long milliseconds)
+{
+  String result;
+
+  Serial.print("Sending AT command: ");
+  Serial.println(toSend);
+  SerialAT.println(toSend);
+
+  unsigned long startTime = millis();
+  Serial.print("Received AT result: ");
+
+  while (millis() - startTime < milliseconds) {
+    if (SerialAT.available()) {
+      char c = SerialAT.read();
+      Serial.write(c);
+      result += c;  // append to the result string
+    }
+  }
+
+return result;
+}
+
+
+/**
+ * Compare the timestamps from two SMS messages. Return true if second is newer than first, false otherwise
+ * 
+ ******************************************************/
+boolean smsTimeCompare(String first, String second)
+{
+  uint8_t firstYear, firstMonth, firstDay, firstHour, firstMinute, firstSecond;
+  uint8_t secondYear, secondMonth, secondDay, secondHour, secondMinute, secondSecond;
+  boolean result;
+
+  firstYear = first.substring(0,2).toInt();
+  firstMonth = first.substring(3,5).toInt();
+  firstDay = first.substring(6,8).toInt();
+  firstHour = first.substring(9,11).toInt();
+  firstMinute = first.substring(12,14).toInt();
+  firstSecond = first.substring(15,17).toInt();
+
+  secondYear = second.substring(0,2).toInt();
+  secondMonth = second.substring(3,5).toInt();
+  secondDay = second.substring(6,8).toInt();
+  secondHour = second.substring(9,11).toInt();
+  secondMinute = second.substring(12,14).toInt();
+  secondSecond = second.substring(15,17).toInt();
+
+  result = false;
+  if (first == "" ) result = true;
+  else if (second == "") result = false;
+  else if (secondYear > firstYear) result = true;
+  else if (secondMonth > firstMonth) result = true;
+  else if (secondDay > firstDay) result = true;
+  else if (secondHour > firstHour) result = true;
+  else if (secondMinute > firstMinute) result = true;
+  else if (secondSecond > firstSecond) result = true;
+  else  result = false;
+
+  return result;
+}
+
+/**
+ * Insert newlines in string after first space before width and limit to maxlines
+ * 
+ ******************************************************/
+String textWrap(String input, int width, int maxlines)
+{
+  int lastspace = -1;
+  int lines = 0;
+  int pos = 0;
+  String result, tmp;
+
+  tmp = input; // copy input String
+  result = "";
+
+  while ( lines < maxlines ) {
+
+    lastspace = -1;
+
+    // look for poition of last space in one line
+    // also seems to work if remainder of input text in tmp is less than width :-)
+    for (pos = 0; pos < width; pos++)
+      if (tmp.substring(pos, pos + 1) == " ") lastspace = pos;
+    
+    // if no space in line OR we are in the last line OR there is no space in the last third of the line
+    // insert newline after width characters
+    if (lastspace == -1 || (lines == maxlines - 1) || lastspace < (width * 2 / 3)) {
+      result = result + tmp.substring(0, width) + "\n";
+      tmp = tmp.substring(width, tmp.length() );
+    }
+    // otherwise insert newline at the last space in the line
+    else {
+      result = result + tmp.substring(0, lastspace) + "\n";
+      tmp = tmp.substring(lastspace + 1, tmp.length() );
+    }
+
+    lines++;
+  }
+
+  return result;
+}
+
+/**
+ * Check for SMS and update global variables if SMS received.
+ * 
+ ******************************************************/
+void checkSMS(void)
+{
+  String tmpNumber, tmpTime, tmpText;
+
+  Serial.println("[ MODEM  ] Checking for SMS ... ");
+
+  // request unread received SMS mesages
+  // sendATcommand("AT+CMGL=\"REC UNREAD\"" , 1000);
+
+  // request all SMS mesages
+  String buffer = sendATcommand("AT+CMGL=\"ALL\"" , 2000);
+
+  // cycle through all SMS in memory and use newest one
+  while ( (buffer.indexOf("+CMGL:") ) != -1 )
+  {
+    // example result. more messages with +CMGL before OK
+    // +CMGL: 1,"REC READ","0190696969","","20/06/23,19:10:24+00"
+    // Ruf! Mich! An!
+    // OK
+
+    buffer = buffer.substring( buffer.indexOf(",\"")+2, buffer.length()); // skip eerything until after the first ,"
+    buffer = buffer.substring( buffer.indexOf(",\"")+2, buffer.length()); // skip eerything until after the second ,"
+    tmpNumber = buffer.substring( 0, buffer.indexOf("\"")); // read sender number until "
+    Serial.print("[ MODEM  ] SMS sender number: ");
+    Serial.print(tmpNumber);
+    Serial.print(" ,");
+
+    buffer = buffer.substring( buffer.indexOf(",\"")+2, buffer.length()); // skip eerything until after the third ,"
+    buffer = buffer.substring( buffer.indexOf(",\"")+2, buffer.length()); // skip eerything until after the fourth ,"
+    tmpTime = buffer.substring( 0, buffer.indexOf("+")); // read timestamp until + (leave out timezone Information)
+    Serial.print("SMS timestamp: ");
+    Serial.print(tmpTime);
+    Serial.print(" ,");
+
+    if (buffer.indexOf("+CMGL:") != -1)
+    {
+      tmpText = buffer.substring( buffer.indexOf("\"")+1, buffer.indexOf("+CMGL:")-1); // SMS text is now after " and before OK
+      buffer = buffer.substring( buffer.indexOf("+CMGL:"), buffer.length()); // skip eerything until next SMS
+    }
+    else
+    {
+      tmpText = buffer.substring( buffer.indexOf("\"")+1, buffer.indexOf("OK")-1); // SMS text is now after " and before OK
+    }
+
+    tmpText.trim(); // get rid of leading and trailing whtespaces, newlines, ...
+    Serial.print("SMS text: ");
+    Serial.println(tmpText); 
+
+    if (smsTimeCompare(smsTime, tmpTime))  // if current SMS has a more up to date timestamp, use that one
+    {
+      smsNumber = tmpNumber;
+      smsTime = tmpTime;
+      smsText = tmpText;
+    }
+
+  // Delete all SMS messages except for unread ones
+  sendATcommand("AT+CMGD=1,3" , 1000);
+  }
+
+}
+
+
+/**
+ * Writes multiline text to the display in such a way that x position is correct for following lines
+ * The function looks for \n to identify newline.
+ * current color and font is used, y distance between two lines has to be given as an argument
+ * 
+ ******************************************************/
+void writeText(String text, int xPos, int yPos, int yDelta)
+{
+  int yPosNext, indexNL;
+  String  tmpText;
+
+  yPosNext = yPos;
+  tmpText = text;
+
+  do
+  {
+    // find next Newline "\n"
+    indexNL = tmpText.indexOf("\n");
+    // if none found --> take remainder of input text
+    if (indexNL == -1)  indexNL = tmpText.length();
+
+    // print current line
+    display.setCursor(xPos, yPosNext);
+    display.print(tmpText.substring(0, indexNL) );
+
+    // remove text that has already been printed
+    tmpText = tmpText.substring(indexNL + 1, tmpText.length() );
+
+    yPosNext += yDelta;
+  }
+  while (tmpText.length() > 0);
+}
 
 /**
  * Update all information from modem.
@@ -158,27 +394,68 @@ void updateScreen()
   display.drawBitmap(images.gift.color, 0, 0, 120, 120, COLOR, display.bm_invert);
   display.drawBitmap(images.gift.black, 0, 0, 120, 120, BLACK, display.bm_invert | display.bm_transparent);
 
-  // Date
-  display.setFont(&FreeSansBold18pt7b);
+  // Date and Update time
+  display.setFont(&FreeSans12pt7b);
   display.setTextColor(COLOR);
-  display.setCursor(160, 45);
+  display.setCursor(155, 25);
   if (currentYear == 0)
     display.printf("--.--.----");
   else
     display.printf("%02d.%02d.%04d", currentDay, currentMonth, currentYear);
 
   // Udate Time
-  display.setFont(&FreeSansBold9pt7b);
+  display.setFont(&Roboto_12);
   display.setTextColor(BLACK);
-  display.setCursor(160, 65);
+  display.setCursor(140, 42);
   if (currentYear == 0)
-    display.printf("Last updated: --:--:--");
+    display.printf(" Last update: --:--:--");
   else
-    display.printf("Last updated: %02d:%02d:%02d", currentHour, currentMin, currentSec);
+    display.printf(" Last update: %02d:%02d:%02d", currentHour, currentMin, currentSec);
 
   // Signal strength
-  chart.signalBars(&display, currentSignalStrength, 345, 10, 5, 7, 40, 5, 3, BLACK, COLOR);
+  chart.signalBars(&display, currentSignalStrength, 
+    SIGBAR_X, SIGBAR_Y, SIGBAR_NUMBARS, SIGBAR_BARWIDTH, SIGBAR_BARHEIGHT, SIGBAR_HEIGHTDELTA, SIGBAR_GAP, BLACK, COLOR);
 
+  // SMS display
+  display.setFont(&Roboto_Bold_12);
+  display.setTextColor(GxEPD_BLACK);
+  display.setCursor(SMS_X, SMS_Y);
+  display.print("OTA Message ");
+  
+  display.setFont(&Roboto_12);
+  display.print(" from: ");
+  if (smsText == "")
+    display.print("-------");
+  else if (smsNumber == "")
+    display.print("unknown");
+  else
+    display.print(smsNumber);
+
+  /* because of space restrictions, currently don't print timestamp
+  display.print("  at ");
+  if (smsText == "")
+    display.print("-----------");
+  else
+    display.print(smsTime);
+  */
+
+  display.setFont(&Roboto_12);
+  display.setTextColor(GxEPD_BLACK);
+  if (smsText == "")
+    writeText(textWrap("Your ex coleagues have forgotten about you. No new OTA Message has been sent to you!", SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
+  else
+    writeText(textWrap(smsText, SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
+  
+  // Wisdom of the day
+  display.setFont(&Roboto_Bold_12);
+  display.setTextColor(GxEPD_BLACK);
+  display.setCursor(WISDOM_X, WISDOM_Y);
+  display.print("Wisdom of the day:");
+  
+  display.setFont(&Roboto_12);
+  writeText(textWrap("The quick brown fox jumps over the lazy dog! Blablablablablablablablablablablablablablablablablablablablablablablablablablbal"
+    , WISDOM_LINELENGTH, WISDOM_LINES), WISDOM_X, WISDOM_Y + WISDOM_LINEHEIGHT, WISDOM_LINEHEIGHT);
+  
   // Uptime and Memory stats
   display.setFont(&Org_01);
   display.setTextColor(BLACK);
@@ -194,15 +471,17 @@ void updateScreen()
                  pressStats.size(),
                  sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity());
 
+
+
   // Linecharts
-  // Chart Title
+  // current values
   display.setFont(&FreeSans12pt7b);
   display.setTextColor(BLACK);
-  display.setCursor(0, 145);
+  display.setCursor(0, 272); // war 145
   display.printf("%.1f C", currentTemperatureCelsius);
-  display.setCursor(135, 145);
+  display.setCursor(135, 272);
   display.printf("%.0f %%", currentHumidityPercent);
-  display.setCursor(270, 145);
+  display.setCursor(270, 272);
   display.printf("%.0f hPa", currentPressurePascal / 100);
 
   // Y-Axis Labels
@@ -342,6 +621,9 @@ void setup()
   Serial.println(modemInfo);
   initStage++;
 
+  // set SMS text format
+  sendATcommand("AT+CMGF=1" , 1000);
+
   initStage++; // Init complete
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
@@ -377,7 +659,10 @@ void loop()
   // 30s Tasks
   if (!(counterBase % (30000L / SCHEDULER_MAIN_LOOP_MS)))
   {
-    doMeasurement();
+     checkSMS();
+
+     doMeasurement();
+
     // memory state
     Serial.printf("[ MEMORY ] Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B) Uptime: %u s\n",
                   ESP.getFreeHeap() / 1024,
