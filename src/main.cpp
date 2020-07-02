@@ -56,6 +56,9 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <Fonts/FreeSansBold18pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/Org_01.h>
+#include <orbitron14.h>
+#include <roboto12.h>
+#include <roboto14.h>
 
 // images
 #include <images.h>
