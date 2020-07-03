@@ -77,7 +77,7 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <Fonts/FreeSansBold9pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeSansBold18pt7b.h>
-#include <Fonts/FreeSans12pt7b.h>
+#include <FreeSans12pt8b.h>
 #include <Fonts/Org_01.h>
 #include <orbitron14.h>
 #include <roboto12.h>
@@ -396,13 +396,13 @@ void updateScreen()
 
   // display.drawBitmap(images.gift.color, 0, 0, 120, 120, COLOR, display.bm_invert);
   // display.drawBitmap(images.gift.black, 0, 0, 120, 120, BLACK, display.bm_invert | display.bm_transparent);
-  display.setCursor(0, 10);
+  display.setCursor(0, 16);
   display.setTextColor(BLACK);
   display.setFont(&NotoSansCJK_Regular9pt8b);
   display.printf("ABCabc123\n\xe4\xf6\xfc\xb0\x80\xc4\xd6\xdc");
 
   // Date and Update time
-  display.setFont(&FreeSans12pt7b);
+  display.setFont(&FreeSans12pt8b);
   display.setTextColor(COLOR);
   display.setCursor(155, 25);
   if (currentYear == 0)
@@ -482,10 +482,10 @@ void updateScreen()
 
   // Linecharts
   // current values
-  display.setFont(&FreeSans12pt7b);
+  display.setFont(&FreeSans12pt8b);
   display.setTextColor(BLACK);
   display.setCursor(0, 272); // war 145
-  display.printf("%.1f C", currentTemperatureCelsius);
+  display.printf("%.1f \xb0""C", currentTemperatureCelsius);
   display.setCursor(135, 272);
   display.printf("%.0f %%", currentHumidityPercent);
   display.setCursor(270, 272);
