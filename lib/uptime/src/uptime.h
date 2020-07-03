@@ -14,5 +14,6 @@ private:
 public:
     Uptime(void);
     uint32_t getSeconds(void);
+    uint32_t getMicros(void);
 };
 #endif

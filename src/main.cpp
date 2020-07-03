@@ -629,8 +629,8 @@ void setup()
   // set SMS text format
   sendATcommand("AT+CMGF=1" , 1000);
 
-  // initialize random number generator
-  randomSeed(analogRead(0));
+  // initialize random number generator, timer should be ok for that purpose
+  randomSeed(uptime.getMicros());
 
   initStage++; // Init complete
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
