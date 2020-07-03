@@ -83,6 +83,7 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <roboto12.h>
 #include <robotobold12.h>
 #include <roboto14.h>
+#include <NotoSans9pt8b.h>
 
 // images
 #include <images.h>
@@ -393,8 +394,12 @@ void updateScreen()
   // Temperature Demo
   display.fillScreen(WHITE);
 
-  display.drawBitmap(images.gift.color, 0, 0, 120, 120, COLOR, display.bm_invert);
-  display.drawBitmap(images.gift.black, 0, 0, 120, 120, BLACK, display.bm_invert | display.bm_transparent);
+  // display.drawBitmap(images.gift.color, 0, 0, 120, 120, COLOR, display.bm_invert);
+  // display.drawBitmap(images.gift.black, 0, 0, 120, 120, BLACK, display.bm_invert | display.bm_transparent);
+  display.setCursor(0, 10);
+  display.setTextColor(BLACK);
+  display.setFont(&NotoSansCJK_Regular9pt8b);
+  display.printf("ABCabc123\n\xe4\xf6\xfc\xb0\x80\xc4\xd6\xdc");
 
   // Date and Update time
   display.setFont(&FreeSans12pt7b);
