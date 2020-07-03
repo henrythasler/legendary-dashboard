@@ -87,6 +87,9 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 // images
 #include <images.h>
 
+// texts for wisdom of the day
+#include <wisdom.h>
+
 // Statistics Helper-Class
 #include <timeseries.h>
 Timeseries tempStats(5000U);
@@ -118,6 +121,8 @@ float currentTimezone = 0.0;
 String smsText = "";
 String smsNumber = "";
 String smsTime = "";
+
+int wisdomText = 0;
 
 // Track initialisation
 uint32_t initStage = 0;
@@ -453,7 +458,7 @@ void updateScreen()
   display.print("Wisdom of the day:");
   
   display.setFont(&Roboto_12);
-  writeText(textWrap("The quick brown fox jumps over the lazy dog! Blablablablablablablablablablablablablablablablablablablablablablablablablablbal"
+  writeText(textWrap(wisdomTexts[wisdomText]
     , WISDOM_LINELENGTH, WISDOM_LINES), WISDOM_X, WISDOM_Y + WISDOM_LINEHEIGHT, WISDOM_LINEHEIGHT);
   
   // Uptime and Memory stats
@@ -624,6 +629,9 @@ void setup()
   // set SMS text format
   sendATcommand("AT+CMGF=1" , 1000);
 
+  // initialize random number generator
+  randomSeed(analogRead(0));
+
   initStage++; // Init complete
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
@@ -693,6 +701,12 @@ void loop()
       tempStats.compact(0.05);
       humStats.compact(0.2);
       pressStats.compact(0.05);
+    }
+
+//    if (!(counter300s % 84)) // change Wisdom Text every 7h --> 7*12 = 84, also in first run
+    if (!(counter300s % 2)) // for testing purposes, change every second 300s interval 
+    {
+      wisdomText = random(WISDOM_NUMBER_OF_TEXTS);
     }
 
     // update modem Information every time display is updated, to get current timestamp
