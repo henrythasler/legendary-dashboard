@@ -86,6 +86,8 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 
 // images
 #include <images.h>
+#include <vector>
+vector<Image> slideshow;
 
 // Statistics Helper-Class
 #include <timeseries.h>
@@ -513,10 +515,11 @@ void updateScreen()
   chart.lineChart(&display, &humStats, 135, 150, 130, 100, BLACK);
   chart.lineChart(&display, &pressStats, 270, 150, 130, 100, BLACK);
 
-  if (!((counter300s + 1) % 10))
+  // Slideshow every 1h
+  if (!((counter300s + 1) % 12))
   {
-    display.drawBitmap(images.yellowScreen.color, 0, 0, 400, 400, COLOR, display.bm_invert);
-    display.drawBitmap(images.yellowScreen.black, 0, 0, 400, 300, BLACK, display.bm_invert | display.bm_transparent);
+    display.drawBitmap(slideshow.at(counter300s%slideshow.size()).color, 0, 0, 400, 400, COLOR, display.bm_invert);
+    display.drawBitmap(slideshow.at(counter300s%slideshow.size()).black, 0, 0, 400, 300, BLACK, display.bm_invert | display.bm_transparent);
   }
 
   display.update();
@@ -623,6 +626,18 @@ void setup()
 
   // set SMS text format
   sendATcommand("AT+CMGF=1" , 1000);
+  initStage++;
+
+  // setup slideshow content
+  Serial.println("[  INIT  ] Creating slideshow...");
+  slideshow.push_back(images.beer);
+  slideshow.push_back(images.bmw);
+  slideshow.push_back(images.bruce);
+  slideshow.push_back(images.yellowScreen);
+  slideshow.push_back(images.coffin);
+  slideshow.push_back(images.parking);
+  slideshow.push_back(images.unittest);
+  slideshow.push_back(images.fixing);
 
   initStage++; // Init complete
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
