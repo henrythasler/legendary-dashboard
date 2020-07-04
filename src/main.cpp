@@ -654,12 +654,12 @@ void setup()
   initStage++;
 
   Serial.println("[  INIT  ] Clock synchronization");
-  uptime.setTime({tm_sec : 0, tm_min : 19, tm_hour : 20, tm_mday : 4, tm_mon : 7, tm_year : 2020 - 1900});
+  uptime.setTime({tm_sec : 0, tm_min : 44, tm_hour : 20, tm_mday : 4, tm_mon : 7, tm_year : 2020 - 1900});
   // https://github.com/lbernstone/ESP32_settimeofday/blob/master/settimeofday.ino
   setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0", 1); //"Europe/Berlin"  from: http://www.famschmid.net/timezones.html
   tzset(); // Assign the local timezone from setenv  
-  
-  initStage++; // Init complete
+  initStage++;
+
   // initialize random number generator, timer should be ok for that purpose
   Serial.println("[  INIT  ] Setting up RNG...");
   randomSeed(uptime.getMicros());
