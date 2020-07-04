@@ -7,9 +7,9 @@ Timeseries::Timeseries(uint32_t maxLength)
   maxHistoryLength = maxLength;
 }
 
-bool Timeseries::push(uint32_t timestamp, float value)
+bool Timeseries::push(float timestamp, float value)
 {
-  bool updateStats = false;
+  bool updateStatsNeeded = false;
   min = value < min ? value : min;
   max = value > max ? value : max;
 
@@ -17,36 +17,37 @@ bool Timeseries::push(uint32_t timestamp, float value)
   {
     if (data.size() >= maxHistoryLength)
     {
-      updateStats = true;
+      updateStatsNeeded = true;
       data.erase(data.begin());
     }
     data.push_back(Point({timestamp, value}));
 
-    if (updateStats)
-    {
-      min = 1e12;
-      max = -1e12;
-      float val = 0;
-      for (PointIterator i = data.begin(); i != data.end(); ++i)
-      {
-        val = float(Point(*i).value);
-        min = val < min ? val : min;
-        max = val > max ? val : max;
-      }
-    }
-    id++;
+    if (updateStatsNeeded)
+      updateStats();
   }
+  // this could be out-of-memory situations or the block size is too big to be allocated
   catch (const exception &e)
   {
 #ifdef ARDUINO
-    Serial.printf("[ ERROR ] Statistics::push(): %s\n", e.what());
+    Serial.printf("[ ERROR ] Timeseries::push(): %s\n", e.what());
 #else
-    printf("Error in Statistics::push(): %s\n", e.what());
+    printf("Error in Timeseries::push(): %s\n", e.what());
 #endif
     return false;
   }
 
   return true;
+}
+
+void Timeseries::updateStats()
+{
+  min = 1e12;
+  max = -1e12;
+  for (Point &p : data)
+  {
+    min = p.value < min ? p.value : min;
+    max = p.value > max ? p.value : max;
+  }
 }
 
 float Timeseries::mean()
@@ -58,7 +59,7 @@ float Timeseries::mean()
     mean = data[0].value;
     for (PointIterator i = data.begin() + 1; i != data.end(); ++i)
     {
-      mean += float(Point(*i).value);
+      mean += Point(*i).value;
     }
     mean = mean / data.size();
   }
@@ -78,7 +79,7 @@ uint32_t Timeseries::capacity()
 // from: https://rosettacode.org/wiki/Ramer-Douglas-Peucker_line_simplification#C.2B.2B
 float Timeseries::perpendicularDistance(const Point &pt, const Point &lineStart, const Point &lineEnd)
 {
-  float dx = float(lineEnd.time) - float(lineStart.time);
+  float dx = lineEnd.time - lineStart.time;
   float dy = lineEnd.value - lineStart.value;
 
   //Normalise
@@ -89,7 +90,7 @@ float Timeseries::perpendicularDistance(const Point &pt, const Point &lineStart,
     dy /= mag;
   }
 
-  float pvx = float(pt.time) - float(lineStart.time);
+  float pvx = pt.time - lineStart.time;
   float pvy = pt.value - lineStart.value;
 
   //Get dot product (project pv onto normalized direction)
@@ -212,4 +213,40 @@ int32_t Timeseries::trim(uint32_t currentTimeSeconds, uint32_t maxAgeSeconds)
   }
 
   return removedEntries;
+}
+
+/****************
+ * A simple sliding window averaging function
+ * @param samples the resulting window size is 2 * samples + 1
+ */
+void Timeseries::movingAverage(int32_t samples)
+{
+  vector<Point> tmp = data;
+  float div = 1.;
+  try
+  {
+    for (int32_t i = 0; i < data.size(); i++)
+    {
+      div = 1.;
+      for (int32_t j = -samples; j <= samples; j++)
+      {
+        if (j != 0)
+        {
+          data.at(i).time += tmp.at(std::min(std::max(i + j, 0), int(data.size() - 1))).time;
+          data.at(i).value += tmp.at(std::min(std::max(i + j, 0), int(data.size() - 1))).value;
+          div += 1;
+        }
+      }
+      data.at(i).time /= div;
+      data.at(i).value /= div;
+    }
+  }
+  catch (const std::exception &e)
+  {
+#ifdef ARDUINO
+    Serial.printf("[ ERROR ] Timeseries::movingAverage(): %s\n", e.what());
+#else
+    printf("Error in Timeseries::movingAverage(): %s\n", e.what());
+#endif
+  }
 }

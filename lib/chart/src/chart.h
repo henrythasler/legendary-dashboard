@@ -28,6 +28,7 @@ public:
                    bool yAxisMaxAuto = true,
                    float yAxisMin = 0,
                    float yAxisMax = 100);
+
     void signalBars(GxEPD_Class *display,
                     int strength,
                     int x,
