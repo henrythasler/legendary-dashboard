@@ -686,6 +686,22 @@ void loop()
   {
     // indicate alive
     digitalWrite(LED_BUILTIN, LOW);
+
+    // Sequence to attach to GPRS:
+    // AT+CGATT=1
+    // AT+SAPBR=3,1,"Contype","GPRS"
+    // AT+SAPBR=3,1,"APN","iot.1nce.net"
+    // AT+SAPBR=1,1
+
+    // Check with; will return IP-address
+    // AT+SAPBR=2,1
+    //  +SAPBR: 1,1,"100.85.212.1"
+    //  OK
+
+    // FIXME: time sync over GPRS connection required. GPRS connection must be established before.
+    // AT+CIPGSMLOC=2,1
+    //  +CIPGSMLOC: 0,2020/07/04,12:23:20
+    //  OK
   }
 
   // 30s Tasks
