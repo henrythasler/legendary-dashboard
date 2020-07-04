@@ -727,12 +727,6 @@ void loop()
       pressStats.compact(0.05);
     }
 
-    //    if (!(counter300s % 84)) // change Wisdom Text every 7h --> 7*12 = 84, also in first run
-    if (!(counter300s % 2)) // for testing purposes, change every second 300s interval
-    {
-      wisdomText = random(WISDOM_NUMBER_OF_TEXTS);
-    }
-
     // update modem Information every time display is updated, to get current timestamp
     updateModemInfo();
 
@@ -749,6 +743,10 @@ void loop()
   // 1h Tasks
   if (!(counterBase % (3600000L / SCHEDULER_MAIN_LOOP_MS)))
   {
+    if (!(counter1h % 7))
+    {
+      wisdomText = random(WISDOM_NUMBER_OF_TEXTS);
+    }
     counter1h++;
   }
 
