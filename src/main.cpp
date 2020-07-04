@@ -111,13 +111,6 @@ float currentHumidityPercent = 0;
 float currentPressurePascal = 0;
 
 uint8_t currentSignalStrength = 0;
-int currentYear = 0;
-int currentMonth = 0;
-int currentDay = 0;
-int currentHour = 0;
-int currentMin = 0;
-int currentSec = 0;
-float currentTimezone = 0.0;
 
 String smsText = "";
 String smsNumber = "";
@@ -362,17 +355,6 @@ void updateModemInfo(void)
   currentSignalStrength = modem.getSignalQuality();
   Serial.print("[ MODEM  ] Sigal Quality [0-31]: ");
   Serial.println(currentSignalStrength);
-
-  if (modem.isNetworkConnected())
-  {
-    modem.getNetworkTime(&currentYear, &currentMonth, &currentDay, &currentHour, &currentMin, &currentSec, &currentTimezone);
-    Serial.printf("[ MODEM  ] Current Network Time (Values) - Year: %d, Month: %02d, Day: %02d, Hour: %02d, Minute: %02d, Second: %02d, Timezone: %.1f\n",
-                  currentYear, currentMonth, currentDay, currentHour, currentMin, currentSec, currentTimezone);
-  }
-  else
-  {
-    Serial.println("[  WARN  ] Network not connected.");
-  }
 }
 
 /**
@@ -417,7 +399,7 @@ void updateScreen()
   display.setFont(&FreeSans12pt8b);
   display.setTextColor(COLOR);
   display.setCursor(155, 25);
-  if (currentYear == 0)
+  if (tm->tm_year < 120)
     display.printf("--.--.----");
   else
     display.printf("%02d.%02d.%04d", tm->tm_mday, tm->tm_mon, tm->tm_year + 1900);
@@ -426,7 +408,7 @@ void updateScreen()
   display.setFont(&FreeSans7pt8b);
   display.setTextColor(BLACK);
   display.setCursor(140, 42);
-  if (currentYear == 0)
+  if (tm->tm_year < 120)
     display.printf(" Last update: --:--:--");
   else
     display.printf(" Last update: %02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
