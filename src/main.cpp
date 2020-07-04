@@ -77,7 +77,7 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <Fonts/FreeSansBold9pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeSansBold18pt7b.h>
-#include <Fonts/FreeSans12pt7b.h>
+#include <FreeSans12pt8b.h>
 #include <Fonts/Org_01.h>
 #include <orbitron14.h>
 #include <roboto12.h>
@@ -86,6 +86,8 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 
 // images
 #include <images.h>
+#include <vector>
+vector<Image> slideshow;
 
 // texts for wisdom of the day
 #include <wisdom.h>
@@ -396,11 +398,11 @@ void updateScreen()
   // Temperature Demo
   display.fillScreen(WHITE);
 
-  display.drawBitmap(images.gift.color, 0, 0, 120, 120, COLOR, display.bm_invert);
-  display.drawBitmap(images.gift.black, 0, 0, 120, 120, BLACK, display.bm_invert | display.bm_transparent);
+  display.drawBitmap(images.logo.color, 0, 0, 50, 50, COLOR, display.bm_invert);
+  display.drawBitmap(images.logo.black, 0, 0, 50, 50, BLACK, display.bm_invert | display.bm_transparent);
 
   // Date and Update time
-  display.setFont(&FreeSans12pt7b);
+  display.setFont(&FreeSans12pt8b);
   display.setTextColor(COLOR);
   display.setCursor(155, 25);
   if (currentYear == 0)
@@ -480,10 +482,10 @@ void updateScreen()
 
   // Linecharts
   // current values
-  display.setFont(&FreeSans12pt7b);
+  display.setFont(&FreeSans12pt8b);
   display.setTextColor(BLACK);
   display.setCursor(0, 272); // war 145
-  display.printf("%.1f C", currentTemperatureCelsius);
+  display.printf("%.1f \xb0""C", currentTemperatureCelsius);
   display.setCursor(135, 272);
   display.printf("%.0f %%", currentHumidityPercent);
   display.setCursor(270, 272);
@@ -518,10 +520,11 @@ void updateScreen()
   chart.lineChart(&display, &humStats, 135, 150, 130, 100, BLACK);
   chart.lineChart(&display, &pressStats, 270, 150, 130, 100, BLACK);
 
-  if (!((counter300s + 1) % 10))
+  // Slideshow every 1h
+  if (!((counter300s + 1) % 12))
   {
-    display.drawBitmap(images.yellowScreen.color, 0, 0, 400, 400, COLOR, display.bm_invert);
-    display.drawBitmap(images.yellowScreen.black, 0, 0, 400, 300, BLACK, display.bm_invert | display.bm_transparent);
+    display.drawBitmap(slideshow.at(counter300s%slideshow.size()).color, 0, 0, 400, 400, COLOR, display.bm_invert);
+    display.drawBitmap(slideshow.at(counter300s%slideshow.size()).black, 0, 0, 400, 300, BLACK, display.bm_invert | display.bm_transparent);
   }
 
   display.update();
@@ -628,6 +631,18 @@ void setup()
 
   // set SMS text format
   sendATcommand("AT+CMGF=1" , 1000);
+  initStage++;
+
+  // setup slideshow content
+  Serial.println("[  INIT  ] Creating slideshow...");
+  slideshow.push_back(images.beer);
+  slideshow.push_back(images.bmw);
+  slideshow.push_back(images.bruce);
+  slideshow.push_back(images.yellowScreen);
+  slideshow.push_back(images.coffin);
+  slideshow.push_back(images.parking);
+  slideshow.push_back(images.unittest);
+  slideshow.push_back(images.fixing);
 
   // initialize random number generator, timer should be ok for that purpose
   randomSeed(uptime.getMicros());

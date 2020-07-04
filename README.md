@@ -120,13 +120,14 @@ $ platformio remote agent start 2>&1 >/dev/null &
 
 - [Ramer-Douglas-Peucker line simplification](https://rosettacode.org/wiki/Ramer-Douglas-Peucker_line_simplification#C.2B.2B)
 - [Robust endianness conversion](https://mklimenko.github.io/english/2018/08/22/robust-endian-swap/)
+- [Overloading operators in typedef structs (c++)](https://stackoverflow.com/questions/14047191/overloading-operators-in-typedef-structs-c)
+- [Gaussian Filter generation using C/C++](https://www.programming-techniques.com/2013/02/gaussian-filter-generation-using-cc.html)
 
 ### Artwork
 
 - [Emir Haveric BMW X2 Campaign](https://www.kleinphotographen.com/news/emir-haveric-bmw-x2-campaign/1383)
-- [Overloading operators in typedef structs (c++)](https://stackoverflow.com/questions/14047191/overloading-operators-in-typedef-structs-c)
-- [Gaussian Filter generation using C/C++](https://www.programming-techniques.com/2013/02/gaussian-filter-generation-using-cc.html)
 
 ### Custom Fonts
 
 - [Online Font creator page](http://oleddisplay.squix.ch/#/home)
+- [Adafruit GFX Graphics Library - Using Fonts](https://learn.adafruit.com/adafruit-gfx-graphics-library/using-fonts)
