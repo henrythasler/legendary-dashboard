@@ -407,13 +407,14 @@ void updateScreen()
   display.drawBitmap(images.logo.black, 0, 0, 50, 50, BLACK, display.bm_invert | display.bm_transparent);
 
   // Date and Update time
+  tm *tm = uptime.getTime();
   display.setFont(&FreeSans12pt8b);
   display.setTextColor(COLOR);
   display.setCursor(155, 25);
   if (currentYear == 0)
     display.printf("--.--.----");
   else
-    display.printf("%02d.%02d.%04d", currentDay, currentMonth, currentYear);
+    display.printf("%02d.%02d.%04d", tm->tm_mday, tm->tm_mon, tm->tm_year + 1900);
 
   // Udate Time
   display.setFont(&Roboto_12);
@@ -422,7 +423,7 @@ void updateScreen()
   if (currentYear == 0)
     display.printf(" Last update: --:--:--");
   else
-    display.printf(" Last update: %02d:%02d:%02d", currentHour, currentMin, currentSec);
+    display.printf(" Last update: %02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
 
   // Signal strength
   chart.signalBars(&display, currentSignalStrength,
@@ -647,7 +648,14 @@ void setup()
   slideshow.push_back(images.parking);
   slideshow.push_back(images.unittest);
   slideshow.push_back(images.fixing);
+  initStage++;
 
+  Serial.println("[  INIT  ] Clock synchronization");
+  uptime.setTime({tm_sec : 0, tm_min : 19, tm_hour : 20, tm_mday : 4, tm_mon : 7, tm_year : 2020 - 1900});
+  // https://github.com/lbernstone/ESP32_settimeofday/blob/master/settimeofday.ino
+  setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0", 1); //"Europe/Berlin"  from: http://www.famschmid.net/timezones.html
+  tzset(); // Assign the local timezone from setenv  
+  
   initStage++; // Init complete
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
