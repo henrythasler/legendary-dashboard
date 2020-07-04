@@ -63,8 +63,8 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #define WISDOM_LINES (2)
 #define WISDOM_LINEHEIGHT (16)
 
-#define SIGBAR_X (345)
-#define SIGBAR_Y (10)
+#define SIGBAR_X (352)
+#define SIGBAR_Y (0)
 #define SIGBAR_NUMBARS (5)
 #define SIGBAR_BARWIDTH (7)
 #define SIGBAR_BARHEIGHT (40)
@@ -80,6 +80,7 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <FreeSansBold9pt8b.h>
 #include <FreeSans12pt8b.h>
 #include <FreeSansBold12pt8b.h>
+#include <FreeSansBold14pt8b.h>
 #include <LiberationSansNarrow9pt8b.h>
 #include <LiberationSansNarrowBold9pt8b.h>
 
@@ -396,18 +397,18 @@ void updateScreen()
 
   // Date and Update time
   tm *tm = uptime.getTime();
-  display.setFont(&FreeSans12pt8b);
-  display.setTextColor(COLOR);
-  display.setCursor(155, 25);
+  display.setFont(&FreeSansBold14pt8b);
+  display.setTextColor(BLACK);
+  display.setCursor(155, 20);
   if (tm->tm_year < 120)
     display.printf("--.--.----");
   else
     display.printf("%02d.%02d.%04d", tm->tm_mday, tm->tm_mon, tm->tm_year + 1900);
 
   // Udate Time
-  display.setFont(&FreeSans7pt8b);
+  display.setFont(&FreeSansBold9pt8b);
   display.setTextColor(BLACK);
-  display.setCursor(140, 42);
+  display.setCursor(120, 42);
   if (tm->tm_year < 120)
     display.printf(" Last update: --:--:--");
   else
@@ -432,18 +433,16 @@ void updateScreen()
   else
     display.print(smsNumber);
 
-  /* because of space restrictions, currently don't print timestamp
   display.print("  at ");
   if (smsText == "")
     display.print("-----------");
   else
     display.print(smsTime);
-  */
 
   display.setFont(&LiberationSansNarrow_Regular9pt8b);
   display.setTextColor(GxEPD_BLACK);
   if (smsText == "")
-    writeText(textWrap("Your ex coleagues have forgotten about you. No new OTA Message has been sent to you!", SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
+    writeText(textWrap("Your ex colleagues have forgotten about you. No new OTA Message has been sent to you!", SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
   else
     writeText(textWrap(smsText, SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
 
