@@ -17,6 +17,7 @@
 #define TINY_GSM_MODEM_SIM800     // Modem is SIM800
 #define TINY_GSM_RX_BUFFER (1024) // Set RX buffer to 1Kb
 #include <TinyGsmClient.h>
+#include <TinyGsmCommon.h>
 
 // void setUp(void) {
 // // set stuff up here
@@ -63,38 +64,32 @@ void test_modem(void)
     Serial.println("[  INIT  ] init serial ifc to modem...");
     SerialAT.begin(115200, SERIAL_8N1, MODEM_RX, MODEM_TX);
 
-    modem.streamClear();
+    bool connect = modem.gprsConnect("iot.1nce.net");
+    TEST_ASSERT_TRUE_MESSAGE(connect, "connect GPRS");
 
+    String datetime = modem.getGSMDateTime(DATE_TIME); // DATE_FULL = 0, DATE_TIME = 1, DATE_DATE = 2
+    Serial.print("[  TEST  ] GSM Date Time: "); Serial.println(datetime);
+
+    modem.sendAT(GF("+CIPGSMLOC=2,1"));
+    int code = modem.waitResponse(2000L, "+CIPGSMLOC: ");
+    Serial.print("[  TEST  ] response code of CIPGSMLOC: "); Serial.println(code);
+    TEST_ASSERT_GREATER_OR_EQUAL_INT_MESSAGE(1, code, "woke clock orange");
     String res = modem.stream.readString();
-    Serial.print("[  TEST  ] response: ");
-    Serial.println(res);
-
-    modem.sendAT(GF("+CIPGSMLOC=1,1"));
-    int code = modem.waitResponse(5000L, "+CIPGSMLOC: ");
-    Serial.print("[  TEST  ] response code of CIPGSMLOC: ");
-    Serial.println(code);
-    TEST_ASSERT_GREATER_OR_EQUAL_INT_MESSAGE(1, code, "woke clock orange");
-    
-    res = modem.stream.readString();
-    Serial.print("[  TEST  ] 1st string: ");
-    Serial.println(res);
-
-    TEST_ASSERT_NOT_NULL_MESSAGE(res, "1st read failed");
+    Serial.print("[  TEST  ] response: "); Serial.println(res);
+    TEST_ASSERT_NOT_NULL_MESSAGE(res, "read failed");
     modem.waitResponse(); // wait for the OK
 
-    modem.sendAT(GF("+CCLK?"));
-    code = modem.waitResponse(5000L, "+CCLK: ");
-    Serial.print("[  TEST  ] response code of CCLK: ");
-    Serial.println(code);
-    TEST_ASSERT_GREATER_OR_EQUAL_INT_MESSAGE(1, code, "woke clock orange");
+    // does not return proper time
+    // modem.sendAT(GF("+CCLK?"));
+    // code = modem.waitResponse(5000L, "+CCLK: ");
+    // Serial.print("[  TEST  ] response code of CCLK: ");
+    // Serial.println(code);
+    // TEST_ASSERT_GREATER_OR_EQUAL_INT_MESSAGE(1, code, "woke clock orange");
     
-    res = modem.stream.readString();
-    Serial.print("[  TEST  ] 2nd string: ");
-    Serial.println(res);
-
-    TEST_ASSERT_NOT_NULL_MESSAGE(res, "2nd read failed");
-
-    modem.waitResponse(); // wait for the OK
+    // res = modem.stream.readString();
+    // Serial.print("[  TEST  ] 2nd string: "); Serial.println(res);
+    // TEST_ASSERT_NOT_NULL_MESSAGE(res, "2nd read failed");
+    // modem.waitResponse(); // wait for the OK
 }
 
 void setup()

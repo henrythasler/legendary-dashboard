@@ -112,6 +112,7 @@ float currentHumidityPercent = 0;
 float currentPressurePascal = 0;
 
 uint8_t currentSignalStrength = 0;
+String gpsTime = "0,2020/01/01,00:00:00";
 
 String smsText = "";
 String smsNumber = "";
@@ -356,6 +357,15 @@ void updateModemInfo(void)
   currentSignalStrength = modem.getSignalQuality();
   Serial.print("[ MODEM  ] Sigal Quality [0-31]: ");
   Serial.println(currentSignalStrength);
+
+  // read gps date and time
+  if (modem.isGprsConnected())
+  {
+    modem.sendAT(GF("+CIPGSMLOC=2,1"));  
+    int code = modem.waitResponse(2000L, "+CIPGSMLOC: ");
+    if (code == 1) gpsTime = modem.stream.readString();
+    modem.waitResponse(); // await OK
+  } 
 }
 
 /**
@@ -616,6 +626,9 @@ void setup()
   String modemInfo = modem.getModemInfo();
   Serial.print(", Modem Info: ");
   Serial.println(modemInfo);
+  bool connect = modem.gprsConnect("iot.1nce.net");
+  Serial.print("GPRS connected: ");
+  Serial.print(connect);
   initStage++;
 
   // set SMS text format
