@@ -393,8 +393,8 @@ void updateScreen()
   // Temperature Demo
   display.fillScreen(WHITE);
 
-  display.drawBitmap(images.gift.color, 0, 0, 120, 120, COLOR, display.bm_invert);
-  display.drawBitmap(images.gift.black, 0, 0, 120, 120, BLACK, display.bm_invert | display.bm_transparent);
+  display.drawBitmap(images.logo.color, 0, 0, 50, 50, COLOR, display.bm_invert);
+  display.drawBitmap(images.logo.black, 0, 0, 50, 50, BLACK, display.bm_invert | display.bm_transparent);
 
   // Date and Update time
   display.setFont(&FreeSans12pt7b);
