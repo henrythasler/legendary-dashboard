@@ -63,8 +63,8 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #define WISDOM_LINES (2)
 #define WISDOM_LINEHEIGHT (16)
 
-#define SIGBAR_X (345)
-#define SIGBAR_Y (10)
+#define SIGBAR_X (352)
+#define SIGBAR_Y (0)
 #define SIGBAR_NUMBARS (5)
 #define SIGBAR_BARWIDTH (7)
 #define SIGBAR_BARHEIGHT (40)
@@ -80,6 +80,7 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <FreeSansBold9pt8b.h>
 #include <FreeSans12pt8b.h>
 #include <FreeSansBold12pt8b.h>
+#include <FreeSansBold14pt8b.h>
 #include <LiberationSansNarrow9pt8b.h>
 #include <LiberationSansNarrowBold9pt8b.h>
 
@@ -111,13 +112,6 @@ float currentHumidityPercent = 0;
 float currentPressurePascal = 0;
 
 uint8_t currentSignalStrength = 0;
-int currentYear = 0;
-int currentMonth = 0;
-int currentDay = 0;
-int currentHour = 0;
-int currentMin = 0;
-int currentSec = 0;
-float currentTimezone = 0.0;
 
 String smsText = "";
 String smsNumber = "";
@@ -362,17 +356,6 @@ void updateModemInfo(void)
   currentSignalStrength = modem.getSignalQuality();
   Serial.print("[ MODEM  ] Sigal Quality [0-31]: ");
   Serial.println(currentSignalStrength);
-
-  if (modem.isNetworkConnected())
-  {
-    modem.getNetworkTime(&currentYear, &currentMonth, &currentDay, &currentHour, &currentMin, &currentSec, &currentTimezone);
-    Serial.printf("[ MODEM  ] Current Network Time (Values) - Year: %d, Month: %02d, Day: %02d, Hour: %02d, Minute: %02d, Second: %02d, Timezone: %.1f\n",
-                  currentYear, currentMonth, currentDay, currentHour, currentMin, currentSec, currentTimezone);
-  }
-  else
-  {
-    Serial.println("[  WARN  ] Network not connected.");
-  }
 }
 
 /**
@@ -413,22 +396,23 @@ void updateScreen()
   display.drawBitmap(images.logo.black, 0, 0, 50, 50, BLACK, display.bm_invert | display.bm_transparent);
 
   // Date and Update time
-  display.setFont(&FreeSans12pt8b);
-  display.setTextColor(COLOR);
-  display.setCursor(155, 25);
-  if (currentYear == 0)
+  tm *tm = uptime.getTime();
+  display.setFont(&FreeSansBold14pt8b);
+  display.setTextColor(BLACK);
+  display.setCursor(155, 20);
+  if (tm->tm_year < 120)
     display.printf("--.--.----");
   else
-    display.printf("%02d.%02d.%04d", currentDay, currentMonth, currentYear);
+    display.printf("%02d.%02d.%04d", tm->tm_mday, tm->tm_mon, tm->tm_year + 1900);
 
   // Udate Time
-  display.setFont(&FreeSans7pt8b);
+  display.setFont(&FreeSansBold9pt8b);
   display.setTextColor(BLACK);
-  display.setCursor(140, 42);
-  if (currentYear == 0)
+  display.setCursor(120, 42);
+  if (tm->tm_year < 120)
     display.printf(" Last update: --:--:--");
   else
-    display.printf(" Last update: %02d:%02d:%02d", currentHour, currentMin, currentSec);
+    display.printf(" Last update: %02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
 
   // Signal strength
   chart.signalBars(&display, currentSignalStrength,
@@ -449,18 +433,16 @@ void updateScreen()
   else
     display.print(smsNumber);
 
-  /* because of space restrictions, currently don't print timestamp
   display.print("  at ");
   if (smsText == "")
     display.print("-----------");
   else
     display.print(smsTime);
-  */
 
   display.setFont(&LiberationSansNarrow_Regular9pt8b);
   display.setTextColor(GxEPD_BLACK);
   if (smsText == "")
-    writeText(textWrap("Your ex coleagues have forgotten about you. No new OTA Message has been sent to you!", SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
+    writeText(textWrap("Your ex colleagues have forgotten about you. No new OTA Message has been sent to you!", SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
   else
     writeText(textWrap(smsText, SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
 
@@ -650,6 +632,13 @@ void setup()
   slideshow.push_back(images.parking);
   slideshow.push_back(images.unittest);
   slideshow.push_back(images.fixing);
+  initStage++;
+
+  Serial.println("[  INIT  ] Clock synchronization");
+  uptime.setTime({tm_sec : 0, tm_min : 44, tm_hour : 20, tm_mday : 4, tm_mon : 7, tm_year : 2020 - 1900});
+  // https://github.com/lbernstone/ESP32_settimeofday/blob/master/settimeofday.ino
+  setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0", 1); //"Europe/Berlin"  from: http://www.famschmid.net/timezones.html
+  tzset(); // Assign the local timezone from setenv  
   initStage++;
 
   // initialize random number generator, timer should be ok for that purpose
