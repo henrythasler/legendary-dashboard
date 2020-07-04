@@ -51,38 +51,37 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #define HAS_RED_COLOR
 
 // screen positions and text formatting
-#define SMS_X               (130)
-#define SMS_Y               (65)
-#define SMS_LINELENGTH      (34)
-#define SMS_LINES           (3)
-#define SMS_LINEHEIGHT      (12)
+#define SMS_X (0)
+#define SMS_Y (67)
+#define SMS_LINELENGTH (55)
+#define SMS_LINES (2)
+#define SMS_LINEHEIGHT (16)
 
-#define WISDOM_X            (10)
-#define WISDOM_Y            (118)
-#define WISDOM_LINELENGTH   (55)
-#define WISDOM_LINES        (2)
-#define WISDOM_LINEHEIGHT   (12)
+#define WISDOM_X (0)
+#define WISDOM_Y (118)
+#define WISDOM_LINELENGTH (55)
+#define WISDOM_LINES (2)
+#define WISDOM_LINEHEIGHT (16)
 
-#define SIGBAR_X            (345)
-#define SIGBAR_Y            (10)
-#define SIGBAR_NUMBARS      (5)
-#define SIGBAR_BARWIDTH     (7)
-#define SIGBAR_BARHEIGHT    (40)
-#define SIGBAR_HEIGHTDELTA  (5)
-#define SIGBAR_GAP          (3)
+#define SIGBAR_X (345)
+#define SIGBAR_Y (10)
+#define SIGBAR_NUMBARS (5)
+#define SIGBAR_BARWIDTH (7)
+#define SIGBAR_BARHEIGHT (40)
+#define SIGBAR_HEIGHTDELTA (5)
+#define SIGBAR_GAP (3)
 
-
-
-// FreeFonts from Adafruit_GFX
-#include <Fonts/FreeSansBold9pt7b.h>
-#include <Fonts/FreeMonoBold18pt7b.h>
-#include <Fonts/FreeSansBold18pt7b.h>
-#include <FreeSans12pt8b.h>
 #include <Fonts/Org_01.h>
-#include <orbitron14.h>
-#include <roboto12.h>
-#include <robotobold12.h>
-#include <roboto14.h>
+
+// Custom 8-bit Fonts including character codes 128-255 (e.g. öäü)
+#include <FreeSans7pt8b.h>
+#include <FreeSansBold7pt8b.h>
+#include <FreeSans9pt8b.h>
+#include <FreeSansBold9pt8b.h>
+#include <FreeSans12pt8b.h>
+#include <FreeSansBold12pt8b.h>
+#include <LiberationSansNarrow9pt8b.h>
+#include <LiberationSansNarrowBold9pt8b.h>
 
 // images
 #include <images.h>
@@ -151,17 +150,18 @@ String sendATcommand(const char *toSend, unsigned long milliseconds)
   unsigned long startTime = millis();
   Serial.print("Received AT result: ");
 
-  while (millis() - startTime < milliseconds) {
-    if (SerialAT.available()) {
+  while (millis() - startTime < milliseconds)
+  {
+    if (SerialAT.available())
+    {
       char c = SerialAT.read();
       Serial.write(c);
-      result += c;  // append to the result string
+      result += c; // append to the result string
     }
   }
 
-return result;
+  return result;
 }
-
 
 /**
  * Compare the timestamps from two SMS messages. Return true if second is newer than first, false otherwise
@@ -173,30 +173,39 @@ boolean smsTimeCompare(String first, String second)
   uint8_t secondYear, secondMonth, secondDay, secondHour, secondMinute, secondSecond;
   boolean result;
 
-  firstYear = first.substring(0,2).toInt();
-  firstMonth = first.substring(3,5).toInt();
-  firstDay = first.substring(6,8).toInt();
-  firstHour = first.substring(9,11).toInt();
-  firstMinute = first.substring(12,14).toInt();
-  firstSecond = first.substring(15,17).toInt();
+  firstYear = first.substring(0, 2).toInt();
+  firstMonth = first.substring(3, 5).toInt();
+  firstDay = first.substring(6, 8).toInt();
+  firstHour = first.substring(9, 11).toInt();
+  firstMinute = first.substring(12, 14).toInt();
+  firstSecond = first.substring(15, 17).toInt();
 
-  secondYear = second.substring(0,2).toInt();
-  secondMonth = second.substring(3,5).toInt();
-  secondDay = second.substring(6,8).toInt();
-  secondHour = second.substring(9,11).toInt();
-  secondMinute = second.substring(12,14).toInt();
-  secondSecond = second.substring(15,17).toInt();
+  secondYear = second.substring(0, 2).toInt();
+  secondMonth = second.substring(3, 5).toInt();
+  secondDay = second.substring(6, 8).toInt();
+  secondHour = second.substring(9, 11).toInt();
+  secondMinute = second.substring(12, 14).toInt();
+  secondSecond = second.substring(15, 17).toInt();
 
   result = false;
-  if (first == "" ) result = true;
-  else if (second == "") result = false;
-  else if (secondYear > firstYear) result = true;
-  else if (secondMonth > firstMonth) result = true;
-  else if (secondDay > firstDay) result = true;
-  else if (secondHour > firstHour) result = true;
-  else if (secondMinute > firstMinute) result = true;
-  else if (secondSecond > firstSecond) result = true;
-  else  result = false;
+  if (first == "")
+    result = true;
+  else if (second == "")
+    result = false;
+  else if (secondYear > firstYear)
+    result = true;
+  else if (secondMonth > firstMonth)
+    result = true;
+  else if (secondDay > firstDay)
+    result = true;
+  else if (secondHour > firstHour)
+    result = true;
+  else if (secondMinute > firstMinute)
+    result = true;
+  else if (secondSecond > firstSecond)
+    result = true;
+  else
+    result = false;
 
   return result;
 }
@@ -215,25 +224,29 @@ String textWrap(String input, int width, int maxlines)
   tmp = input; // copy input String
   result = "";
 
-  while ( lines < maxlines ) {
+  while (lines < maxlines)
+  {
 
     lastspace = -1;
 
     // look for poition of last space in one line
     // also seems to work if remainder of input text in tmp is less than width :-)
     for (pos = 0; pos < width; pos++)
-      if (tmp.substring(pos, pos + 1) == " ") lastspace = pos;
-    
+      if (tmp.substring(pos, pos + 1) == " ")
+        lastspace = pos;
+
     // if no space in line OR we are in the last line OR there is no space in the last third of the line
     // insert newline after width characters
-    if (lastspace == -1 || (lines == maxlines - 1) || lastspace < (width * 2 / 3)) {
+    if (lastspace == -1 || (lines == maxlines - 1) || lastspace < (width * 2 / 3))
+    {
       result = result + tmp.substring(0, width) + "\n";
-      tmp = tmp.substring(width, tmp.length() );
+      tmp = tmp.substring(width, tmp.length());
     }
     // otherwise insert newline at the last space in the line
-    else {
+    else
+    {
       result = result + tmp.substring(0, lastspace) + "\n";
-      tmp = tmp.substring(lastspace + 1, tmp.length() );
+      tmp = tmp.substring(lastspace + 1, tmp.length());
     }
 
     lines++;
@@ -256,57 +269,55 @@ void checkSMS(void)
   // sendATcommand("AT+CMGL=\"REC UNREAD\"" , 1000);
 
   // request all SMS mesages
-  String buffer = sendATcommand("AT+CMGL=\"ALL\"" , 2000);
+  String buffer = sendATcommand("AT+CMGL=\"ALL\"", 2000);
 
   // cycle through all SMS in memory and use newest one
-  while ( (buffer.indexOf("+CMGL:") ) != -1 )
+  while ((buffer.indexOf("+CMGL:")) != -1)
   {
     // example result. more messages with +CMGL before OK
     // +CMGL: 1,"REC READ","0190696969","","20/06/23,19:10:24+00"
     // Ruf! Mich! An!
     // OK
 
-    buffer = buffer.substring( buffer.indexOf(",\"")+2, buffer.length()); // skip eerything until after the first ,"
-    buffer = buffer.substring( buffer.indexOf(",\"")+2, buffer.length()); // skip eerything until after the second ,"
-    tmpNumber = buffer.substring( 0, buffer.indexOf("\"")); // read sender number until "
+    buffer = buffer.substring(buffer.indexOf(",\"") + 2, buffer.length()); // skip eerything until after the first ,"
+    buffer = buffer.substring(buffer.indexOf(",\"") + 2, buffer.length()); // skip eerything until after the second ,"
+    tmpNumber = buffer.substring(0, buffer.indexOf("\""));                 // read sender number until "
     Serial.print("[ MODEM  ] SMS sender number: ");
     Serial.print(tmpNumber);
     Serial.print(" ,");
 
-    buffer = buffer.substring( buffer.indexOf(",\"")+2, buffer.length()); // skip eerything until after the third ,"
-    buffer = buffer.substring( buffer.indexOf(",\"")+2, buffer.length()); // skip eerything until after the fourth ,"
-    tmpTime = buffer.substring( 0, buffer.indexOf("+")); // read timestamp until + (leave out timezone Information)
+    buffer = buffer.substring(buffer.indexOf(",\"") + 2, buffer.length()); // skip eerything until after the third ,"
+    buffer = buffer.substring(buffer.indexOf(",\"") + 2, buffer.length()); // skip eerything until after the fourth ,"
+    tmpTime = buffer.substring(0, buffer.indexOf("+"));                    // read timestamp until + (leave out timezone Information)
     Serial.print("SMS timestamp: ");
     Serial.print(tmpTime);
     Serial.print(" ,");
 
     if (buffer.indexOf("+CMGL:") != -1)
     {
-      tmpText = buffer.substring( buffer.indexOf("\"")+1, buffer.indexOf("+CMGL:")-1); // SMS text is now after " and before OK
-      buffer = buffer.substring( buffer.indexOf("+CMGL:"), buffer.length()); // skip eerything until next SMS
+      tmpText = buffer.substring(buffer.indexOf("\"") + 1, buffer.indexOf("+CMGL:") - 1); // SMS text is now after " and before OK
+      buffer = buffer.substring(buffer.indexOf("+CMGL:"), buffer.length());               // skip eerything until next SMS
     }
     else
     {
-      tmpText = buffer.substring( buffer.indexOf("\"")+1, buffer.indexOf("OK")-1); // SMS text is now after " and before OK
+      tmpText = buffer.substring(buffer.indexOf("\"") + 1, buffer.indexOf("OK") - 1); // SMS text is now after " and before OK
     }
 
     tmpText.trim(); // get rid of leading and trailing whtespaces, newlines, ...
     Serial.print("SMS text: ");
-    Serial.println(tmpText); 
+    Serial.println(tmpText);
 
-    if (smsTimeCompare(smsTime, tmpTime))  // if current SMS has a more up to date timestamp, use that one
+    if (smsTimeCompare(smsTime, tmpTime)) // if current SMS has a more up to date timestamp, use that one
     {
       smsNumber = tmpNumber;
       smsTime = tmpTime;
       smsText = tmpText;
     }
 
-  // Delete all SMS messages except for unread ones
-  sendATcommand("AT+CMGD=1,3" , 1000);
+    // Delete all SMS messages except for unread ones
+    sendATcommand("AT+CMGD=1,3", 1000);
   }
-
 }
-
 
 /**
  * Writes multiline text to the display in such a way that x position is correct for following lines
@@ -317,7 +328,7 @@ void checkSMS(void)
 void writeText(String text, int xPos, int yPos, int yDelta)
 {
   int yPosNext, indexNL;
-  String  tmpText;
+  String tmpText;
 
   yPosNext = yPos;
   tmpText = text;
@@ -327,18 +338,18 @@ void writeText(String text, int xPos, int yPos, int yDelta)
     // find next Newline "\n"
     indexNL = tmpText.indexOf("\n");
     // if none found --> take remainder of input text
-    if (indexNL == -1)  indexNL = tmpText.length();
+    if (indexNL == -1)
+      indexNL = tmpText.length();
 
     // print current line
     display.setCursor(xPos, yPosNext);
-    display.print(tmpText.substring(0, indexNL) );
+    display.print(tmpText.substring(0, indexNL));
 
     // remove text that has already been printed
-    tmpText = tmpText.substring(indexNL + 1, tmpText.length() );
+    tmpText = tmpText.substring(indexNL + 1, tmpText.length());
 
     yPosNext += yDelta;
-  }
-  while (tmpText.length() > 0);
+  } while (tmpText.length() > 0);
 }
 
 /**
@@ -411,7 +422,7 @@ void updateScreen()
     display.printf("%02d.%02d.%04d", currentDay, currentMonth, currentYear);
 
   // Udate Time
-  display.setFont(&Roboto_12);
+  display.setFont(&FreeSans7pt8b);
   display.setTextColor(BLACK);
   display.setCursor(140, 42);
   if (currentYear == 0)
@@ -420,16 +431,16 @@ void updateScreen()
     display.printf(" Last update: %02d:%02d:%02d", currentHour, currentMin, currentSec);
 
   // Signal strength
-  chart.signalBars(&display, currentSignalStrength, 
-    SIGBAR_X, SIGBAR_Y, SIGBAR_NUMBARS, SIGBAR_BARWIDTH, SIGBAR_BARHEIGHT, SIGBAR_HEIGHTDELTA, SIGBAR_GAP, BLACK, COLOR);
+  chart.signalBars(&display, currentSignalStrength,
+                   SIGBAR_X, SIGBAR_Y, SIGBAR_NUMBARS, SIGBAR_BARWIDTH, SIGBAR_BARHEIGHT, SIGBAR_HEIGHTDELTA, SIGBAR_GAP, BLACK, COLOR);
 
   // SMS display
-  display.setFont(&Roboto_Bold_12);
+  display.setFont(&LiberationSansNarrow_Bold9pt8b);
   display.setTextColor(GxEPD_BLACK);
   display.setCursor(SMS_X, SMS_Y);
   display.print("OTA Message ");
-  
-  display.setFont(&Roboto_12);
+
+  display.setFont(&LiberationSansNarrow_Regular9pt8b);
   display.print(" from: ");
   if (smsText == "")
     display.print("-------");
@@ -446,29 +457,27 @@ void updateScreen()
     display.print(smsTime);
   */
 
-  display.setFont(&Roboto_12);
+  display.setFont(&LiberationSansNarrow_Regular9pt8b);
   display.setTextColor(GxEPD_BLACK);
   if (smsText == "")
     writeText(textWrap("Your ex coleagues have forgotten about you. No new OTA Message has been sent to you!", SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
   else
     writeText(textWrap(smsText, SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
-  
+
   // Wisdom of the day
-  display.setFont(&Roboto_Bold_12);
+  display.setFont(&LiberationSansNarrow_Bold9pt8b);
   display.setTextColor(GxEPD_BLACK);
   display.setCursor(WISDOM_X, WISDOM_Y);
   display.print("Wisdom of the day:");
-  
-  display.setFont(&Roboto_12);
-  writeText(textWrap(wisdomTexts[wisdomText]
-    , WISDOM_LINELENGTH, WISDOM_LINES), WISDOM_X, WISDOM_Y + WISDOM_LINEHEIGHT, WISDOM_LINEHEIGHT);
-  
+
+  display.setFont(&LiberationSansNarrow_Regular9pt8b);
+  writeText(textWrap(wisdomTexts[wisdomText], WISDOM_LINELENGTH, WISDOM_LINES), WISDOM_X, WISDOM_Y + WISDOM_LINEHEIGHT, WISDOM_LINEHEIGHT);
+
   // Uptime and Memory stats
   display.setFont(&Org_01);
   display.setTextColor(BLACK);
-  display.setCursor(0, 290);
-  display.printf("up: %us\nFree: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
-                 uptime.getSeconds(),
+  display.setCursor(0, 298);
+  display.printf("Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
                  ESP.getFreeHeap() / 1024,
                  ESP.getMaxAllocHeap() / 1024,
                  tempStats.size(),
@@ -478,53 +487,54 @@ void updateScreen()
                  pressStats.size(),
                  sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity());
 
-
+  // current values
+  display.fillRect(0, 260, 400, 30, COLOR);
+  display.setFont(&FreeSansBold12pt8b);
+  display.setTextColor(BLACK);
+  display.setCursor(10, 282);
+  display.printf("%.1f\xb0"
+                 "C",
+                 currentTemperatureCelsius);
+  display.setCursor(145, 282);
+  display.printf("%.0f%%", currentHumidityPercent);
+  display.setCursor(280, 282);
+  display.printf("%.0fhPa", currentPressurePascal / 100);
 
   // Linecharts
-  // current values
-  display.setFont(&FreeSans12pt8b);
-  display.setTextColor(BLACK);
-  display.setCursor(0, 272); // war 145
-  display.printf("%.1f \xb0""C", currentTemperatureCelsius);
-  display.setCursor(135, 272);
-  display.printf("%.0f %%", currentHumidityPercent);
-  display.setCursor(270, 272);
-  display.printf("%.0f hPa", currentPressurePascal / 100);
-
   // Y-Axis Labels
   display.setFont(&Org_01);
   display.setTextColor(BLACK);
-  display.setCursor(2, 155);
+  display.setCursor(2, 165);
   display.printf("%.1f", tempStats.max);
-  display.setCursor(2, 249);
+  display.setCursor(2, 254);
   display.printf("%.1f", tempStats.min);
 
-  display.setCursor(135, 155);
+  display.setCursor(135, 165);
   display.printf("%.0f", humStats.max);
-  display.setCursor(135, 249);
+  display.setCursor(135, 254);
   display.printf("%.0f", humStats.min);
 
-  display.setCursor(268, 155);
+  display.setCursor(268, 165);
   display.printf("%.1f", pressStats.max);
-  display.setCursor(268, 249);
+  display.setCursor(268, 254);
   display.printf("%.1f", pressStats.min);
 
   // Frame
-  display.drawFastHLine(0, 149, 400, BLACK);
-  display.drawFastHLine(0, 251, 400, BLACK);
-  display.drawFastVLine(133, 149, 102, BLACK);
-  display.drawFastVLine(266, 149, 102, BLACK);
+  display.drawFastHLine(0, 159, 400, BLACK);
+  display.drawFastHLine(0, 256, 400, BLACK);
+  display.drawFastVLine(133, 159, 97, BLACK);
+  display.drawFastVLine(266, 159, 97, BLACK);
 
   // Charts
-  chart.lineChart(&display, &tempStats, 0, 150, 130, 100, BLACK);
-  chart.lineChart(&display, &humStats, 135, 150, 130, 100, BLACK);
-  chart.lineChart(&display, &pressStats, 270, 150, 130, 100, BLACK);
+  chart.lineChart(&display, &tempStats, 0, 160, 130, 95, BLACK);
+  chart.lineChart(&display, &humStats, 135, 160, 130, 95, BLACK);
+  chart.lineChart(&display, &pressStats, 270, 160, 130, 95, BLACK);
 
   // Slideshow every 1h
   if (!((counter300s + 1) % 12))
   {
-    display.drawBitmap(slideshow.at(counter300s%slideshow.size()).color, 0, 0, 400, 400, COLOR, display.bm_invert);
-    display.drawBitmap(slideshow.at(counter300s%slideshow.size()).black, 0, 0, 400, 300, BLACK, display.bm_invert | display.bm_transparent);
+    display.drawBitmap(slideshow.at(counter300s % slideshow.size()).color, 0, 0, 400, 400, COLOR, display.bm_invert);
+    display.drawBitmap(slideshow.at(counter300s % slideshow.size()).black, 0, 0, 400, 300, BLACK, display.bm_invert | display.bm_transparent);
   }
 
   display.update();
@@ -595,9 +605,6 @@ void setup()
 
   display.init(/*115200*/); // uncomment serial speed definition for debug output
   io.setFrequency(500000L); // set to 500kHz; the default setting (4MHz) could be unreliable with active modem and unshielded wiring
-  display.setTextColor(BLACK);
-  display.setFont(&FreeMonoBold18pt7b);
-  display.fillScreen(WHITE);
   delay(100);
   initStage++;
 
@@ -630,7 +637,7 @@ void setup()
   initStage++;
 
   // set SMS text format
-  sendATcommand("AT+CMGF=1" , 1000);
+  sendATcommand("AT+CMGF=1", 1000);
   initStage++;
 
   // setup slideshow content
@@ -643,11 +650,13 @@ void setup()
   slideshow.push_back(images.parking);
   slideshow.push_back(images.unittest);
   slideshow.push_back(images.fixing);
+  initStage++;
 
   // initialize random number generator, timer should be ok for that purpose
+  Serial.println("[  INIT  ] Setting up RNG...");
   randomSeed(uptime.getMicros());
+  initStage++;
 
-  initStage++; // Init complete
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
 
@@ -682,9 +691,9 @@ void loop()
   // 30s Tasks
   if (!(counterBase % (30000L / SCHEDULER_MAIN_LOOP_MS)))
   {
-     checkSMS();
+    checkSMS();
 
-     doMeasurement();
+    doMeasurement();
 
     // memory state
     Serial.printf("[ MEMORY ] Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B) Uptime: %u s\n",
@@ -718,8 +727,8 @@ void loop()
       pressStats.compact(0.05);
     }
 
-//    if (!(counter300s % 84)) // change Wisdom Text every 7h --> 7*12 = 84, also in first run
-    if (!(counter300s % 2)) // for testing purposes, change every second 300s interval 
+    //    if (!(counter300s % 84)) // change Wisdom Text every 7h --> 7*12 = 84, also in first run
+    if (!(counter300s % 2)) // for testing purposes, change every second 300s interval
     {
       wisdomText = random(WISDOM_NUMBER_OF_TEXTS);
     }
