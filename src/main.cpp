@@ -51,17 +51,17 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #define HAS_RED_COLOR
 
 // screen positions and text formatting
-#define SMS_X (130)
-#define SMS_Y (65)
-#define SMS_LINELENGTH (34)
-#define SMS_LINES (3)
-#define SMS_LINEHEIGHT (12)
+#define SMS_X (0)
+#define SMS_Y (67)
+#define SMS_LINELENGTH (55)
+#define SMS_LINES (2)
+#define SMS_LINEHEIGHT (16)
 
-#define WISDOM_X (10)
+#define WISDOM_X (0)
 #define WISDOM_Y (118)
 #define WISDOM_LINELENGTH (55)
 #define WISDOM_LINES (2)
-#define WISDOM_LINEHEIGHT (12)
+#define WISDOM_LINEHEIGHT (16)
 
 #define SIGBAR_X (345)
 #define SIGBAR_Y (10)
@@ -71,21 +71,25 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #define SIGBAR_HEIGHTDELTA (5)
 #define SIGBAR_GAP (3)
 
-// FreeFonts from Adafruit_GFX
-#include <Fonts/FreeSansBold9pt7b.h>
-#include <Fonts/FreeMonoBold18pt7b.h>
-#include <Fonts/FreeSansBold18pt7b.h>
-#include <FreeSans12pt8b.h>
 #include <Fonts/Org_01.h>
-#include <orbitron14.h>
-#include <roboto12.h>
-#include <robotobold12.h>
-#include <roboto14.h>
+
+// Custom 8-bit Fonts including character codes 128-255 (e.g. öäü)
+#include <FreeSans7pt8b.h>
+#include <FreeSansBold7pt8b.h>
+#include <FreeSans9pt8b.h>
+#include <FreeSansBold9pt8b.h>
+#include <FreeSans12pt8b.h>
+#include <FreeSansBold12pt8b.h>
+#include <LiberationSansNarrow9pt8b.h>
+#include <LiberationSansNarrowBold9pt8b.h>
 
 // images
 #include <images.h>
 #include <vector>
 vector<Image> slideshow;
+
+// texts for wisdom of the day
+#include <wisdom.h>
 
 // Statistics Helper-Class
 #include <timeseries.h>
@@ -118,6 +122,8 @@ float currentTimezone = 0.0;
 String smsText = "";
 String smsNumber = "";
 String smsTime = "";
+
+int wisdomText = 0;
 
 // Track initialisation
 uint32_t initStage = 0;
@@ -416,7 +422,7 @@ void updateScreen()
     display.printf("%02d.%02d.%04d", currentDay, currentMonth, currentYear);
 
   // Udate Time
-  display.setFont(&Roboto_12);
+  display.setFont(&FreeSans7pt8b);
   display.setTextColor(BLACK);
   display.setCursor(140, 42);
   if (currentYear == 0)
@@ -429,12 +435,12 @@ void updateScreen()
                    SIGBAR_X, SIGBAR_Y, SIGBAR_NUMBARS, SIGBAR_BARWIDTH, SIGBAR_BARHEIGHT, SIGBAR_HEIGHTDELTA, SIGBAR_GAP, BLACK, COLOR);
 
   // SMS display
-  display.setFont(&Roboto_Bold_12);
+  display.setFont(&LiberationSansNarrow_Bold9pt8b);
   display.setTextColor(GxEPD_BLACK);
   display.setCursor(SMS_X, SMS_Y);
   display.print("OTA Message ");
 
-  display.setFont(&Roboto_12);
+  display.setFont(&LiberationSansNarrow_Regular9pt8b);
   display.print(" from: ");
   if (smsText == "")
     display.print("-------");
@@ -451,7 +457,7 @@ void updateScreen()
     display.print(smsTime);
   */
 
-  display.setFont(&Roboto_12);
+  display.setFont(&LiberationSansNarrow_Regular9pt8b);
   display.setTextColor(GxEPD_BLACK);
   if (smsText == "")
     writeText(textWrap("Your ex coleagues have forgotten about you. No new OTA Message has been sent to you!", SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
@@ -459,20 +465,19 @@ void updateScreen()
     writeText(textWrap(smsText, SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
 
   // Wisdom of the day
-  display.setFont(&Roboto_Bold_12);
+  display.setFont(&LiberationSansNarrow_Bold9pt8b);
   display.setTextColor(GxEPD_BLACK);
   display.setCursor(WISDOM_X, WISDOM_Y);
   display.print("Wisdom of the day:");
 
-  display.setFont(&Roboto_12);
-  writeText(textWrap("The quick brown fox jumps over the lazy dog! Blablablablablablablablablablablablablablablablablablablablablablablablablablbal", WISDOM_LINELENGTH, WISDOM_LINES), WISDOM_X, WISDOM_Y + WISDOM_LINEHEIGHT, WISDOM_LINEHEIGHT);
+  display.setFont(&LiberationSansNarrow_Regular9pt8b);
+  writeText(textWrap(wisdomTexts[wisdomText], WISDOM_LINELENGTH, WISDOM_LINES), WISDOM_X, WISDOM_Y + WISDOM_LINEHEIGHT, WISDOM_LINEHEIGHT);
 
   // Uptime and Memory stats
   display.setFont(&Org_01);
   display.setTextColor(BLACK);
-  display.setCursor(0, 290);
-  display.printf("up: %us\nFree: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
-                 uptime.getSeconds(),
+  display.setCursor(0, 298);
+  display.printf("Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
                  ESP.getFreeHeap() / 1024,
                  ESP.getMaxAllocHeap() / 1024,
                  tempStats.size(),
@@ -482,47 +487,48 @@ void updateScreen()
                  pressStats.size(),
                  sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity());
 
-  // Linecharts
   // current values
-  display.setFont(&FreeSans12pt8b);
+  display.fillRect(0, 260, 400, 30, COLOR);
+  display.setFont(&FreeSansBold12pt8b);
   display.setTextColor(BLACK);
-  display.setCursor(0, 272); // war 145
-  display.printf("%.1f \xb0"
+  display.setCursor(10, 282);
+  display.printf("%.1f\xb0"
                  "C",
                  currentTemperatureCelsius);
-  display.setCursor(135, 272);
-  display.printf("%.0f %%", currentHumidityPercent);
-  display.setCursor(270, 272);
-  display.printf("%.0f hPa", currentPressurePascal / 100);
+  display.setCursor(145, 282);
+  display.printf("%.0f%%", currentHumidityPercent);
+  display.setCursor(280, 282);
+  display.printf("%.0fhPa", currentPressurePascal / 100);
 
+  // Linecharts
   // Y-Axis Labels
   display.setFont(&Org_01);
   display.setTextColor(BLACK);
-  display.setCursor(2, 155);
+  display.setCursor(2, 165);
   display.printf("%.1f", tempStats.max);
-  display.setCursor(2, 249);
+  display.setCursor(2, 254);
   display.printf("%.1f", tempStats.min);
 
-  display.setCursor(135, 155);
+  display.setCursor(135, 165);
   display.printf("%.0f", humStats.max);
-  display.setCursor(135, 249);
+  display.setCursor(135, 254);
   display.printf("%.0f", humStats.min);
 
-  display.setCursor(268, 155);
+  display.setCursor(268, 165);
   display.printf("%.1f", pressStats.max);
-  display.setCursor(268, 249);
+  display.setCursor(268, 254);
   display.printf("%.1f", pressStats.min);
 
   // Frame
-  display.drawFastHLine(0, 149, 400, BLACK);
-  display.drawFastHLine(0, 251, 400, BLACK);
-  display.drawFastVLine(133, 149, 102, BLACK);
-  display.drawFastVLine(266, 149, 102, BLACK);
+  display.drawFastHLine(0, 159, 400, BLACK);
+  display.drawFastHLine(0, 256, 400, BLACK);
+  display.drawFastVLine(133, 159, 97, BLACK);
+  display.drawFastVLine(266, 159, 97, BLACK);
 
   // Charts
-  chart.lineChart(&display, &tempStats, 0, 150, 130, 100, BLACK);
-  chart.lineChart(&display, &humStats, 135, 150, 130, 100, BLACK);
-  chart.lineChart(&display, &pressStats, 270, 150, 130, 100, BLACK);
+  chart.lineChart(&display, &tempStats, 0, 160, 130, 95, BLACK);
+  chart.lineChart(&display, &humStats, 135, 160, 130, 95, BLACK);
+  chart.lineChart(&display, &pressStats, 270, 160, 130, 95, BLACK);
 
   // Slideshow every 1h
   if (!((counter300s + 1) % 12))
@@ -599,9 +605,6 @@ void setup()
 
   display.init(/*115200*/); // uncomment serial speed definition for debug output
   io.setFrequency(500000L); // set to 500kHz; the default setting (4MHz) could be unreliable with active modem and unshielded wiring
-  display.setTextColor(BLACK);
-  display.setFont(&FreeMonoBold18pt7b);
-  display.fillScreen(WHITE);
   delay(100);
   initStage++;
 
@@ -647,8 +650,13 @@ void setup()
   slideshow.push_back(images.parking);
   slideshow.push_back(images.unittest);
   slideshow.push_back(images.fixing);
+  initStage++;
 
-  initStage++; // Init complete
+  // initialize random number generator, timer should be ok for that purpose
+  Serial.println("[  INIT  ] Setting up RNG...");
+  randomSeed(uptime.getMicros());
+  initStage++;
+
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
 
@@ -751,6 +759,10 @@ void loop()
   // 1h Tasks
   if (!(counterBase % (3600000L / SCHEDULER_MAIN_LOOP_MS)))
   {
+    if (!(counter1h % 7))
+    {
+      wisdomText = random(WISDOM_NUMBER_OF_TEXTS);
+    }
     counter1h++;
   }
 
