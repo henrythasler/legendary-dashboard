@@ -109,10 +109,25 @@ uint32_t counter300s = 0;
 uint32_t counter1h = 0;
 bool enableDisplay = true; // display output can be disabled for testing purposes with this flag
 
+String sendATcommand(const char *toSend, unsigned long milliseconds)
+{
+  String result;
+  SerialAT.println(toSend);
 
-int execute(){  
-    Serial.println(line);
-    return 0;
+  unsigned long startTime = millis();
+  while (millis() - startTime < milliseconds) {
+    if (SerialAT.available()) {
+      char c = SerialAT.read();
+      result += c;  // append to the result string
+    }
+  }
+
+return result;
+}
+
+void execute(){  
+    // Serial.println(sendATcommand(line, 500));
+    Serial.println(sendATcommand(line, 2000));
 }
 
 void read_line(){
@@ -282,7 +297,7 @@ void setup()
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
 
   // delay to allow modem connect to network
-  delay(4000);
+  // delay(4000);
 }
 
 /**
