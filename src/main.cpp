@@ -112,7 +112,7 @@ float currentHumidityPercent = 0;
 float currentPressurePascal = 0;
 
 uint8_t currentSignalStrength = 0;
-String gpsTime = "0,2020/01/01,00:00:00";
+String gpsTime = "";
 
 String smsText = "";
 String smsNumber = "";
@@ -358,13 +358,15 @@ void updateModemInfo(void)
   Serial.print("[ MODEM  ] Sigal Quality [0-31]: ");
   Serial.println(currentSignalStrength);
 
-  // read gps date and time
-  if (modem.isGprsConnected())
+  // read gps date and time if not already
+  if (modem.isGprsConnected() && (gpsTime.length() < 21))
   {
     modem.sendAT(GF("+CIPGSMLOC=2,1"));  
     int code = modem.waitResponse(2000L, "+CIPGSMLOC: ");
     if (code == 1) gpsTime = modem.stream.readString();
     modem.waitResponse(); // await OK
+    Serial.printf("[ MODEM  ] CIPGSMLOC: %s\n", gpsTime.c_str());
+    uptime.parseModemTime(gpsTime);
   } 
 }
 
@@ -618,17 +620,21 @@ void setup()
   // Restart takes quite some time
   // use modem.init() if you don't need the complete restart
   Serial.println("[  INIT  ] Initializing modem...");
-  modem.restart();
+  // modem.restart();
+  modem.init();
+
+  // delay to allow modem connect to network
+  delay(5000);
 
   String name = modem.getModemName();
   Serial.print("[  INIT  ] Modem Name: ");
   Serial.print(name);
   String modemInfo = modem.getModemInfo();
   Serial.print(", Modem Info: ");
-  Serial.println(modemInfo);
+  Serial.print(modemInfo);
   bool connect = modem.gprsConnect("iot.1nce.net");
-  Serial.print("GPRS connected: ");
-  Serial.print(connect);
+  Serial.print(", GPRS connected: ");
+  Serial.println(connect);
   initStage++;
 
   // set SMS text format
@@ -648,10 +654,14 @@ void setup()
   initStage++;
 
   Serial.println("[  INIT  ] Clock synchronization");
-  uptime.setTime({tm_sec : 0, tm_min : 44, tm_hour : 20, tm_mday : 4, tm_mon : 7, tm_year : 2020 - 1900});
+  updateModemInfo();
+  // uptime.setTime({tm_sec : 0, tm_min : 44, tm_hour : 20, tm_mday : 4, tm_mon : 7, tm_year : 2020 - 1900});
   // https://github.com/lbernstone/ESP32_settimeofday/blob/master/settimeofday.ino
   setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0", 1); //"Europe/Berlin"  from: http://www.famschmid.net/timezones.html
-  tzset(); // Assign the local timezone from setenv  
+  tzset(); // Assign the local timezone from setenv
+
+  tm *tm = uptime.getTime();
+  Serial.printf("[  INIT  ] Current time is now %02d.%02d.%04d %02d:%02d:%02d\n", tm->tm_mday, tm->tm_mon, tm->tm_year + 1900, tm->tm_hour, tm->tm_min, tm->tm_sec);
   initStage++;
 
   // initialize random number generator, timer should be ok for that purpose
@@ -662,8 +672,6 @@ void setup()
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
 
-  // delay to allow modem connect to network
-  delay(4000);
 }
 
 /**
@@ -714,7 +722,7 @@ void loop()
     doMeasurement();
 
     // memory state
-    Serial.printf("[ MEMORY ] Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B) Uptime: %u s\n",
+    Serial.printf("[ MEMORY ] Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B) Timestamp: %u s\n",
                   ESP.getFreeHeap() / 1024,
                   ESP.getMaxAllocHeap() / 1024,
                   tempStats.size(),
