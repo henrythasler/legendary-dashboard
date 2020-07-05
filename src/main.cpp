@@ -614,7 +614,7 @@ void setup()
 
   // Set GSM module baud rate and UART pins
   Serial.println("[  INIT  ] Initializing serial interface to modem...");
-  SerialAT.begin(115200, SERIAL_8N1, MODEM_RX, MODEM_TX);
+  SerialAT.begin(9600, SERIAL_8N1, MODEM_RX, MODEM_TX);
   initStage++;
 
   // Restart takes quite some time

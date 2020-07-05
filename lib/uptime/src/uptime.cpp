@@ -32,11 +32,13 @@ tm *Uptime::getTime(void)
     return localtime(&nowtime);
 }
 
-bool Uptime::parseModemTime(String modemTime)
+bool Uptime::parseModemTime(unsigned char * modemTime)
 {
     tm tm;
     if (modemTime.length() < 21)
         return false;
+
+    std::string timeStr(modemTime);
 
     // example: "0,2020/07/05,06:21:02"
     try
