@@ -753,9 +753,6 @@ void loop()
       pressStats.compact(0.05);
     }
 
-    // update modem Information every time display is updated, to get current timestamp
-    updateModemInfo();
-
     if (enableDisplay)
     {
       Serial.print("[  DISP  ] Updating... ");
