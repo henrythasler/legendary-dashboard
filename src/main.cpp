@@ -85,7 +85,7 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <LiberationSansNarrowBold9pt8b.h>
 
 // images
-#include <images.h>
+#include <gfx.h>
 #include <vector>
 vector<Image> slideshow;
 
@@ -139,7 +139,7 @@ String sendATcommand(const char *toSend, unsigned long milliseconds)
   String result;
 
   Serial.print("Sending AT command: ");
-  Serial.println(toSend);
+  Serial.print(toSend);
   SerialAT.println(toSend);
 
   unsigned long startTime = millis();
@@ -150,11 +150,10 @@ String sendATcommand(const char *toSend, unsigned long milliseconds)
     if (SerialAT.available())
     {
       char c = SerialAT.read();
-      Serial.write(c);
       result += c; // append to the result string
     }
   }
-
+  Serial.printf("Received AT result: %s", result.c_str());
   return result;
 }
 
@@ -361,13 +360,14 @@ void updateModemInfo(void)
   // read gps date and time if not already
   if (modem.isGprsConnected() && (gpsTime.length() < 21))
   {
-    modem.sendAT(GF("+CIPGSMLOC=2,1"));  
+    modem.sendAT(GF("+CIPGSMLOC=2,1"));
     int code = modem.waitResponse(6000L, "+CIPGSMLOC: ");
-    if (code == 1) gpsTime = modem.stream.readString();
+    if (code == 1)
+      gpsTime = modem.stream.readString();
     modem.waitResponse(); // await OK
     Serial.printf("[ MODEM  ] CIPGSMLOC: %s\n", gpsTime.c_str());
     uptime.parseModemTime(gpsTime.c_str());
-  } 
+  }
 }
 
 /**
@@ -401,17 +401,15 @@ void doMeasurement(void)
  ******************************************************/
 void updateScreen()
 {
-  // Temperature Demo
   display.fillScreen(WHITE);
-
-  display.drawBitmap(images.logo.color, 0, 0, 50, 50, COLOR, display.bm_invert);
-  display.drawBitmap(images.logo.black, 0, 0, 50, 50, BLACK, display.bm_invert | display.bm_transparent);
+  display.fillRect(0, 0, 400, 52, COLOR);
+  display.drawBitmap(icons.logo.black, 0, 0, 50, 50, BLACK, display.bm_invert | display.bm_transparent);
 
   // Date and Update time
   tm *tm = uptime.getTime();
   display.setFont(&FreeSansBold14pt8b);
   display.setTextColor(BLACK);
-  display.setCursor(155, 20);
+  display.setCursor(135, 20);
   if (tm->tm_year < 120)
     display.printf("--.--.----");
   else
@@ -420,7 +418,7 @@ void updateScreen()
   // Udate Time
   display.setFont(&FreeSansBold9pt8b);
   display.setTextColor(BLACK);
-  display.setCursor(120, 42);
+  display.setCursor(100, 42);
   if (tm->tm_year < 120)
     display.printf(" Last update: --:--:--");
   else
@@ -428,7 +426,7 @@ void updateScreen()
 
   // Signal strength
   chart.signalBars(&display, currentSignalStrength,
-                   SIGBAR_X, SIGBAR_Y, SIGBAR_NUMBARS, SIGBAR_BARWIDTH, SIGBAR_BARHEIGHT, SIGBAR_HEIGHTDELTA, SIGBAR_GAP, BLACK, COLOR);
+                   SIGBAR_X, SIGBAR_Y, SIGBAR_NUMBARS, SIGBAR_BARWIDTH, SIGBAR_BARHEIGHT, SIGBAR_HEIGHTDELTA, SIGBAR_GAP, BLACK, BLACK, WHITE);
 
   // SMS display
   display.setFont(&LiberationSansNarrow_Bold9pt8b);
@@ -469,7 +467,8 @@ void updateScreen()
 
   // Uptime and Memory stats
   display.setFont(&Org_01);
-  display.setTextColor(BLACK);
+  display.fillRect(0, 292, 400, 299, BLACK);
+  display.setTextColor(WHITE);
   display.setCursor(0, 298);
   display.printf("Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
                  ESP.getFreeHeap() / 1024,
@@ -482,17 +481,17 @@ void updateScreen()
                  sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity());
 
   // current values
-  display.fillRect(0, 260, 400, 30, COLOR);
+  display.fillRect(0, 260, 400, 32, COLOR);
   display.setFont(&FreeSansBold12pt8b);
   display.setTextColor(BLACK);
-  display.setCursor(10, 282);
+  display.setCursor(35, 282);
   display.printf("%.1f\xb0"
                  "C",
                  currentTemperatureCelsius);
-  display.setCursor(145, 282);
+  display.setCursor(180, 282);
   display.printf("%.0f%%", currentHumidityPercent);
-  display.setCursor(280, 282);
-  display.printf("%.0fhPa", currentPressurePascal / 100);
+  display.setCursor(290, 282);
+  display.printf("%.0f hPa", currentPressurePascal / 100);
 
   // Linecharts
   // Y-Axis Labels
@@ -651,6 +650,7 @@ void setup()
   slideshow.push_back(images.parking);
   slideshow.push_back(images.unittest);
   slideshow.push_back(images.fixing);
+  slideshow.push_back(images.employees);
   initStage++;
 
   Serial.println("[  INIT  ] Clock synchronization");
@@ -658,7 +658,7 @@ void setup()
   // uptime.setTime({tm_sec : 0, tm_min : 44, tm_hour : 20, tm_mday : 4, tm_mon : 7, tm_year : 2020 - 1900});
   // https://github.com/lbernstone/ESP32_settimeofday/blob/master/settimeofday.ino
   setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0", 1); //"Europe/Berlin"  from: http://www.famschmid.net/timezones.html
-  tzset(); // Assign the local timezone from setenv
+  tzset();                                     // Assign the local timezone from setenv
 
   tm *tm = uptime.getTime();
   Serial.printf("[  INIT  ] Current time is: %02d.%02d.%04d %02d:%02d:%02d\n", tm->tm_mday, tm->tm_mon, tm->tm_year + 1900, tm->tm_hour, tm->tm_min, tm->tm_sec);
@@ -671,7 +671,6 @@ void setup()
 
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
-
 }
 
 /**
@@ -766,10 +765,7 @@ void loop()
   // 1h Tasks
   if (!(counterBase % (3600000L / SCHEDULER_MAIN_LOOP_MS)))
   {
-    if (!(counter1h % 7))
-    {
-      wisdomText = random(WISDOM_NUMBER_OF_TEXTS);
-    }
+    wisdomText = random(WISDOM_NUMBER_OF_TEXTS);
     counter1h++;
   }
 

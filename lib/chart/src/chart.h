@@ -39,6 +39,7 @@ public:
                     int heightdelta,
                     int gap,
                     uint16_t strokeColor = 0,     // BLACK
+                    uint16_t signalColor = 0, // WHITE
                     uint16_t fillColor = 0xFFFF); // WHITE
 #endif
 };
