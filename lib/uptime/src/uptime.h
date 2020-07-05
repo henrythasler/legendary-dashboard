@@ -7,6 +7,11 @@
 #include <stddef.h>
 #include <time.h>
 #include <sys/time.h>
+#include <string> 
+
+#ifdef ARDUINO
+#include <Arduino.h>
+#endif
 
 using namespace std;
 
@@ -19,6 +24,6 @@ public:
     bool setTime(tm time);
     tm *getTime(void);
     uint32_t getMicros(void);
-    bool parseModemTime(unsigned char *modemTime);
+    bool parseModemTime(const char *modemTime);
 };
 #endif

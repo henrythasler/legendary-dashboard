@@ -362,11 +362,11 @@ void updateModemInfo(void)
   if (modem.isGprsConnected() && (gpsTime.length() < 21))
   {
     modem.sendAT(GF("+CIPGSMLOC=2,1"));  
-    int code = modem.waitResponse(2000L, "+CIPGSMLOC: ");
+    int code = modem.waitResponse(6000L, "+CIPGSMLOC: ");
     if (code == 1) gpsTime = modem.stream.readString();
     modem.waitResponse(); // await OK
     Serial.printf("[ MODEM  ] CIPGSMLOC: %s\n", gpsTime.c_str());
-    uptime.parseModemTime(gpsTime);
+    uptime.parseModemTime(gpsTime.c_str());
   } 
 }
 
@@ -661,7 +661,7 @@ void setup()
   tzset(); // Assign the local timezone from setenv
 
   tm *tm = uptime.getTime();
-  Serial.printf("[  INIT  ] Current time is now %02d.%02d.%04d %02d:%02d:%02d\n", tm->tm_mday, tm->tm_mon, tm->tm_year + 1900, tm->tm_hour, tm->tm_min, tm->tm_sec);
+  Serial.printf("[  INIT  ] Current time is: %02d.%02d.%04d %02d:%02d:%02d\n", tm->tm_mday, tm->tm_mon, tm->tm_year + 1900, tm->tm_hour, tm->tm_min, tm->tm_sec);
   initStage++;
 
   // initialize random number generator, timer should be ok for that purpose
