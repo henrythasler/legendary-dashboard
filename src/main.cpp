@@ -138,22 +138,27 @@ String sendATcommand(const char *toSend, unsigned long milliseconds)
 {
   String result;
 
-  Serial.print("Sending AT command: ");
+  Serial.print("  Command: ");
   Serial.print(toSend);
   SerialAT.println(toSend);
 
   unsigned long startTime = millis();
-  Serial.print("Received AT result: ");
+  Serial.print("  Result: ");
 
   while (millis() - startTime < milliseconds)
   {
     if (SerialAT.available())
     {
       char c = SerialAT.read();
+      if (c != '\n' && c != '\r')
+      {
+        Serial.write(c);
+      }
       result += c; // append to the result string
     }
   }
-  Serial.printf("Received AT result: %s", result.c_str());
+  Serial.println();
+  // Serial.printf("Received AT result: %s", result.c_str());
   return result;
 }
 
@@ -257,7 +262,7 @@ void checkSMS(void)
 {
   String tmpNumber, tmpTime, tmpText;
 
-  Serial.println("[ MODEM  ] Checking for SMS ... ");
+  Serial.print("[ MODEM  ] Checking for SMS ... ");
 
   // request unread received SMS mesages
   // sendATcommand("AT+CMGL=\"REC UNREAD\"" , 1000);
@@ -470,7 +475,7 @@ void updateScreen()
   display.fillRect(0, 292, 400, 299, BLACK);
   display.setTextColor(WHITE);
   display.setCursor(0, 298);
-  display.printf("Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
+  display.printf("Free: %uK (%uK)  Temp: %u (%uB)  Hum: %u (%uB) Press: %u (%uB) Up: %" PRIi64 "s",
                  ESP.getFreeHeap() / 1024,
                  ESP.getMaxAllocHeap() / 1024,
                  tempStats.size(),
@@ -478,7 +483,8 @@ void updateScreen()
                  humStats.size(),
                  sizeof(humStats.data) + sizeof(Point) * humStats.data.capacity(),
                  pressStats.size(),
-                 sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity());
+                 sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity(),
+                 (esp_timer_get_time() / 1000000LL));
 
   // current values
   display.fillRect(0, 260, 400, 32, COLOR);
@@ -655,7 +661,7 @@ void setup()
 
   Serial.println("[  INIT  ] Clock synchronization");
   updateModemInfo();
-  // uptime.setTime({tm_sec : 0, tm_min : 44, tm_hour : 20, tm_mday : 4, tm_mon : 7, tm_year : 2020 - 1900});
+
   // https://github.com/lbernstone/ESP32_settimeofday/blob/master/settimeofday.ino
   setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0", 1); //"Europe/Berlin"  from: http://www.famschmid.net/timezones.html
   tzset();                                     // Assign the local timezone from setenv
@@ -667,6 +673,7 @@ void setup()
   // initialize random number generator, timer should be ok for that purpose
   Serial.println("[  INIT  ] Setting up RNG...");
   randomSeed(uptime.getMicros());
+  wisdomText = random(wisdomTexts.size());
   initStage++;
 
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
@@ -721,7 +728,7 @@ void loop()
     doMeasurement();
 
     // memory state
-    Serial.printf("[ MEMORY ] Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B) Timestamp: %u s\n",
+    Serial.printf("[ MEMORY ] Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B) Uptime: %" PRIi64 " s\n",
                   ESP.getFreeHeap() / 1024,
                   ESP.getMaxAllocHeap() / 1024,
                   tempStats.size(),
@@ -730,7 +737,7 @@ void loop()
                   sizeof(humStats.data) + sizeof(Point) * humStats.data.capacity(),
                   pressStats.size(),
                   sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity(),
-                  uptime.getSeconds());
+                  (esp_timer_get_time() / 1000000LL));
   }
 
   // 300s Tasks
@@ -767,6 +774,13 @@ void loop()
   {
     const int wisdomNumberOfTexts = static_cast<int>(wisdomTexts.size());
     wisdomText = random(wisdomNumberOfTexts);
+
+    if (!((counter1h + 1) % 48))
+    {
+      // Hacky... ¯\_(ツ)_/¯
+      gpsTime = "";
+      updateModemInfo();
+    }    
     counter1h++;
   }
 
