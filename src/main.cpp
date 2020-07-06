@@ -308,3 +308,26 @@ void loop()
 {
   prompt();
 }
+
+/* useful commands:
+Signal quality: AT+CSQ
+Set SMS text mode: AT+CMGF=1
+Check SMS: AT+CMGL="ALL"
+Check new SMS: AT+CMGR=1 
+
+Sequence to attach to GPRS:
+AT+CGATT=1
+AT+SAPBR=3,1,"Contype","GPRS"
+AT+SAPBR=3,1,"APN","iot.1nce.net"
+AT+SAPBR=1,1
+
+Check with
+AT+SAPBR=2,1
+  +SAPBR: 1,1,"100.85.212.1"
+  OK
+
+time sync over GPRS connection required. GPRS connection must be established before.
+AT+CIPGSMLOC=2,1
+  +CIPGSMLOC: 0,2020/07/04,12:23:20
+  OK
+*/
