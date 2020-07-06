@@ -757,6 +757,8 @@ void loop()
       tempStats.compact(0.05);
       humStats.compact(0.2);
       pressStats.compact(0.05);
+
+      updateModemInfo();
     }
 
     if (enableDisplay)
@@ -779,7 +781,6 @@ void loop()
     {
       // Hacky... ¯\_(ツ)_/¯
       gpsTime = "";
-      updateModemInfo();
     }    
     counter1h++;
   }
