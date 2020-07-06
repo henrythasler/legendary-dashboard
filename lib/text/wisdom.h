@@ -215,7 +215,6 @@ const std::vector<String> wisdomTexts PROGMEM = {
     "+++ Kaviar im Zeugnis: Bayerischer Lehrer belohnt rogens""\xfc""chtigen Sch""\xfc""ler +++",
     "+++ Genfer: Zahnloser Schweizer gibt sich f""\xfc""r ehemaligen deutschen Au""\xdf""enminister aus +++",
     "+++ Lange nicht Font""\xe4""nen geh""\xf6""rt: Meeresanwohner wundert sich, wo Wale geblieben sind +++"
-    "Wie, zu Fu""\xdf"" gehen? Hab doch vier gesunde Reifen!",
 	// Murphys law
 	"If anything can go wrong, it will.",
 	"If anything just cannot go wrong, it will anyway.",
