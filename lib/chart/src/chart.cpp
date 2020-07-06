@@ -58,7 +58,7 @@ void Chart::lineChart(GxEPD_Class *display,
  * Draw bars to show signal strength of mobile network
  * 
  ******************************************************/
-void Chart::signalBars(GxEPD_Class *display, int strength, int x, int y, int numBars, int barWidth, int barHeight, int heightDelta, int gapWidth, uint16_t strokeColor, uint16_t fillColor)
+void Chart::signalBars(GxEPD_Class *display, int strength, int x, int y, int numBars, int barWidth, int barHeight, int heightDelta, int gapWidth, uint16_t strokeColor, uint16_t signalColor, uint16_t fillColor)
 {
     int i;
 
@@ -66,7 +66,10 @@ void Chart::signalBars(GxEPD_Class *display, int strength, int x, int y, int num
     {
         if (strength > (int)((31 / (numBars + 1))) * (i + 1))
         {
-            display->fillRect(x + i * (barWidth + gapWidth), y + (numBars - 1 - i) * heightDelta, barWidth, barHeight - (numBars - 1 - i) * heightDelta, fillColor);
+            display->fillRect(x + i * (barWidth + gapWidth), y + (numBars - 1 - i) * heightDelta, barWidth, barHeight - (numBars - 1 - i) * heightDelta, signalColor);
+        }
+        else {
+            display->fillRect(x + i * (barWidth + gapWidth), y + (numBars - 1 - i) * heightDelta, barWidth, barHeight - (numBars - 1 - i) * heightDelta, fillColor);            
         }
         display->drawRect(x + i * (barWidth + gapWidth), y + (numBars - 1 - i) * heightDelta, barWidth, barHeight - (numBars - 1 - i) * heightDelta, strokeColor);
     }

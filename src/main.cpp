@@ -63,8 +63,8 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #define WISDOM_LINES (2)
 #define WISDOM_LINEHEIGHT (16)
 
-#define SIGBAR_X (345)
-#define SIGBAR_Y (10)
+#define SIGBAR_X (352)
+#define SIGBAR_Y (0)
 #define SIGBAR_NUMBARS (5)
 #define SIGBAR_BARWIDTH (7)
 #define SIGBAR_BARHEIGHT (40)
@@ -80,11 +80,12 @@ GxEPD_Class display(io, /*RST*/ 0, /*BUSY*/ 2);
 #include <FreeSansBold9pt8b.h>
 #include <FreeSans12pt8b.h>
 #include <FreeSansBold12pt8b.h>
+#include <FreeSansBold14pt8b.h>
 #include <LiberationSansNarrow9pt8b.h>
 #include <LiberationSansNarrowBold9pt8b.h>
 
 // images
-#include <images.h>
+#include <gfx.h>
 #include <vector>
 vector<Image> slideshow;
 
@@ -111,13 +112,7 @@ float currentHumidityPercent = 0;
 float currentPressurePascal = 0;
 
 uint8_t currentSignalStrength = 0;
-int currentYear = 0;
-int currentMonth = 0;
-int currentDay = 0;
-int currentHour = 0;
-int currentMin = 0;
-int currentSec = 0;
-float currentTimezone = 0.0;
+String gpsTime = "";
 
 String smsText = "";
 String smsNumber = "";
@@ -144,7 +139,7 @@ String sendATcommand(const char *toSend, unsigned long milliseconds)
   String result;
 
   Serial.print("Sending AT command: ");
-  Serial.println(toSend);
+  Serial.print(toSend);
   SerialAT.println(toSend);
 
   unsigned long startTime = millis();
@@ -155,11 +150,10 @@ String sendATcommand(const char *toSend, unsigned long milliseconds)
     if (SerialAT.available())
     {
       char c = SerialAT.read();
-      Serial.write(c);
       result += c; // append to the result string
     }
   }
-
+  Serial.printf("Received AT result: %s", result.c_str());
   return result;
 }
 
@@ -363,15 +357,16 @@ void updateModemInfo(void)
   Serial.print("[ MODEM  ] Sigal Quality [0-31]: ");
   Serial.println(currentSignalStrength);
 
-  if (modem.isNetworkConnected())
+  // read gps date and time if not already
+  if (modem.isGprsConnected() && (gpsTime.length() < 21))
   {
-    modem.getNetworkTime(&currentYear, &currentMonth, &currentDay, &currentHour, &currentMin, &currentSec, &currentTimezone);
-    Serial.printf("[ MODEM  ] Current Network Time (Values) - Year: %d, Month: %02d, Day: %02d, Hour: %02d, Minute: %02d, Second: %02d, Timezone: %.1f\n",
-                  currentYear, currentMonth, currentDay, currentHour, currentMin, currentSec, currentTimezone);
-  }
-  else
-  {
-    Serial.println("[  WARN  ] Network not connected.");
+    modem.sendAT(GF("+CIPGSMLOC=2,1"));
+    int code = modem.waitResponse(6000L, "+CIPGSMLOC: ");
+    if (code == 1)
+      gpsTime = modem.stream.readString();
+    modem.waitResponse(); // await OK
+    Serial.printf("[ MODEM  ] CIPGSMLOC: %s\n", gpsTime.c_str());
+    uptime.parseModemTime(gpsTime.c_str());
   }
 }
 
@@ -406,33 +401,32 @@ void doMeasurement(void)
  ******************************************************/
 void updateScreen()
 {
-  // Temperature Demo
   display.fillScreen(WHITE);
-
-  display.drawBitmap(images.logo.color, 0, 0, 50, 50, COLOR, display.bm_invert);
-  display.drawBitmap(images.logo.black, 0, 0, 50, 50, BLACK, display.bm_invert | display.bm_transparent);
+  display.fillRect(0, 0, 400, 52, COLOR);
+  display.drawBitmap(icons.logo.black, 0, 0, 50, 50, BLACK, display.bm_invert | display.bm_transparent);
 
   // Date and Update time
-  display.setFont(&FreeSans12pt8b);
-  display.setTextColor(COLOR);
-  display.setCursor(155, 25);
-  if (currentYear == 0)
+  tm *tm = uptime.getTime();
+  display.setFont(&FreeSansBold14pt8b);
+  display.setTextColor(BLACK);
+  display.setCursor(135, 20);
+  if (tm->tm_year < 120)
     display.printf("--.--.----");
   else
-    display.printf("%02d.%02d.%04d", currentDay, currentMonth, currentYear);
+    display.printf("%02d.%02d.%04d", tm->tm_mday, tm->tm_mon, tm->tm_year + 1900);
 
   // Udate Time
-  display.setFont(&FreeSans7pt8b);
+  display.setFont(&FreeSansBold9pt8b);
   display.setTextColor(BLACK);
-  display.setCursor(140, 42);
-  if (currentYear == 0)
+  display.setCursor(100, 42);
+  if (tm->tm_year < 120)
     display.printf(" Last update: --:--:--");
   else
-    display.printf(" Last update: %02d:%02d:%02d", currentHour, currentMin, currentSec);
+    display.printf(" Last update: %02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
 
   // Signal strength
   chart.signalBars(&display, currentSignalStrength,
-                   SIGBAR_X, SIGBAR_Y, SIGBAR_NUMBARS, SIGBAR_BARWIDTH, SIGBAR_BARHEIGHT, SIGBAR_HEIGHTDELTA, SIGBAR_GAP, BLACK, COLOR);
+                   SIGBAR_X, SIGBAR_Y, SIGBAR_NUMBARS, SIGBAR_BARWIDTH, SIGBAR_BARHEIGHT, SIGBAR_HEIGHTDELTA, SIGBAR_GAP, BLACK, BLACK, WHITE);
 
   // SMS display
   display.setFont(&LiberationSansNarrow_Bold9pt8b);
@@ -449,18 +443,16 @@ void updateScreen()
   else
     display.print(smsNumber);
 
-  /* because of space restrictions, currently don't print timestamp
   display.print("  at ");
   if (smsText == "")
     display.print("-----------");
   else
     display.print(smsTime);
-  */
 
   display.setFont(&LiberationSansNarrow_Regular9pt8b);
   display.setTextColor(GxEPD_BLACK);
   if (smsText == "")
-    writeText(textWrap("Your ex coleagues have forgotten about you. No new OTA Message has been sent to you!", SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
+    writeText(textWrap("Your ex colleagues have forgotten about you. No new OTA Message has been sent to you!", SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
   else
     writeText(textWrap(smsText, SMS_LINELENGTH, SMS_LINES), SMS_X, SMS_Y + SMS_LINEHEIGHT, SMS_LINEHEIGHT);
 
@@ -475,7 +467,8 @@ void updateScreen()
 
   // Uptime and Memory stats
   display.setFont(&Org_01);
-  display.setTextColor(BLACK);
+  display.fillRect(0, 292, 400, 299, BLACK);
+  display.setTextColor(WHITE);
   display.setCursor(0, 298);
   display.printf("Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B)",
                  ESP.getFreeHeap() / 1024,
@@ -488,17 +481,17 @@ void updateScreen()
                  sizeof(pressStats.data) + sizeof(Point) * pressStats.data.capacity());
 
   // current values
-  display.fillRect(0, 260, 400, 30, COLOR);
+  display.fillRect(0, 260, 400, 32, COLOR);
   display.setFont(&FreeSansBold12pt8b);
   display.setTextColor(BLACK);
-  display.setCursor(10, 282);
+  display.setCursor(35, 282);
   display.printf("%.1f\xb0"
                  "C",
                  currentTemperatureCelsius);
-  display.setCursor(145, 282);
+  display.setCursor(180, 282);
   display.printf("%.0f%%", currentHumidityPercent);
-  display.setCursor(280, 282);
-  display.printf("%.0fhPa", currentPressurePascal / 100);
+  display.setCursor(290, 282);
+  display.printf("%.0f hPa", currentPressurePascal / 100);
 
   // Linecharts
   // Y-Axis Labels
@@ -626,14 +619,21 @@ void setup()
   // Restart takes quite some time
   // use modem.init() if you don't need the complete restart
   Serial.println("[  INIT  ] Initializing modem...");
-  modem.restart();
+  // modem.restart();
+  modem.init();
+
+  // delay to allow modem connect to network
+  delay(5000);
 
   String name = modem.getModemName();
   Serial.print("[  INIT  ] Modem Name: ");
   Serial.print(name);
   String modemInfo = modem.getModemInfo();
   Serial.print(", Modem Info: ");
-  Serial.println(modemInfo);
+  Serial.print(modemInfo);
+  bool connect = modem.gprsConnect("iot.1nce.net");
+  Serial.print(", GPRS connected: ");
+  Serial.println(connect);
   initStage++;
 
   // set SMS text format
@@ -650,6 +650,18 @@ void setup()
   slideshow.push_back(images.parking);
   slideshow.push_back(images.unittest);
   slideshow.push_back(images.fixing);
+  slideshow.push_back(images.employees);
+  initStage++;
+
+  Serial.println("[  INIT  ] Clock synchronization");
+  updateModemInfo();
+  // uptime.setTime({tm_sec : 0, tm_min : 44, tm_hour : 20, tm_mday : 4, tm_mon : 7, tm_year : 2020 - 1900});
+  // https://github.com/lbernstone/ESP32_settimeofday/blob/master/settimeofday.ino
+  setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0", 1); //"Europe/Berlin"  from: http://www.famschmid.net/timezones.html
+  tzset();                                     // Assign the local timezone from setenv
+
+  tm *tm = uptime.getTime();
+  Serial.printf("[  INIT  ] Current time is: %02d.%02d.%04d %02d:%02d:%02d\n", tm->tm_mday, tm->tm_mon, tm->tm_year + 1900, tm->tm_hour, tm->tm_min, tm->tm_sec);
   initStage++;
 
   // initialize random number generator, timer should be ok for that purpose
@@ -659,9 +671,6 @@ void setup()
 
   Serial.printf("[  INIT  ] Completed at stage %u\n\n", initStage);
   digitalWrite(LED_BUILTIN, HIGH); // turn on LED to indicate normal operation;
-
-  // delay to allow modem connect to network
-  delay(4000);
 }
 
 /**
@@ -712,7 +721,7 @@ void loop()
     doMeasurement();
 
     // memory state
-    Serial.printf("[ MEMORY ] Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B) Uptime: %u s\n",
+    Serial.printf("[ MEMORY ] Free: %u KiB (%u KiB)  Temp: %u (%u B)  Hum: %u (%u B) Press: %u (%u B) Timestamp: %u s\n",
                   ESP.getFreeHeap() / 1024,
                   ESP.getMaxAllocHeap() / 1024,
                   tempStats.size(),
@@ -743,9 +752,6 @@ void loop()
       pressStats.compact(0.05);
     }
 
-    // update modem Information every time display is updated, to get current timestamp
-    updateModemInfo();
-
     if (enableDisplay)
     {
       Serial.print("[  DISP  ] Updating... ");
@@ -759,11 +765,8 @@ void loop()
   // 1h Tasks
   if (!(counterBase % (3600000L / SCHEDULER_MAIN_LOOP_MS)))
   {
-    if (!(counter1h % 7))
-    {
-      const int wisdomNumberOfTexts = static_cast<int>(wisdomTexts.size());
-      wisdomText = random(wisdomNumberOfTexts);
-    }
+    const int wisdomNumberOfTexts = static_cast<int>(wisdomTexts.size());
+    wisdomText = random(wisdomNumberOfTexts);
     counter1h++;
   }
 
