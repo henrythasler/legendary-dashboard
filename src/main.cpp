@@ -765,7 +765,8 @@ void loop()
   // 1h Tasks
   if (!(counterBase % (3600000L / SCHEDULER_MAIN_LOOP_MS)))
   {
-    wisdomText = random(WISDOM_NUMBER_OF_TEXTS);
+    const int wisdomNumberOfTexts = static_cast<int>(wisdomTexts.size());
+    wisdomText = random(wisdomNumberOfTexts);
     counter1h++;
   }
 
