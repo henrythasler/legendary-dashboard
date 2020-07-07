@@ -552,13 +552,13 @@ void updateScreen()
   }
 
   // apply blank screen for a while every day to negate burn-in effects
-  if (tm->tm_hour >= 1 && tm->tm_hour < 2)
+  if ((tm->tm_hour >= 1 )&& (tm->tm_hour < 2))
   {
     Serial.print(" refresh cycle active");
     display.fillScreen(WHITE);
   }
 
-  if (tm->tm_hour >= 2 && tm->tm_hour < 5)
+  if ((tm->tm_hour >= 2) && (tm->tm_hour < 5))
   {
     Serial.print(" screensaver active");
   }
