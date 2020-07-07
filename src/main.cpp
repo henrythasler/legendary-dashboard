@@ -362,16 +362,31 @@ void updateModemInfo(void)
   Serial.print("[ MODEM  ] Sigal Quality [0-31]: ");
   Serial.println(currentSignalStrength);
 
-  // read gps date and time if not already
-  if (modem.isGprsConnected() && (gpsTime.length() < 21))
+  // read gps date and time if needed
+  if (gpsTime.length() < 21)
   {
-    modem.sendAT(GF("+CIPGSMLOC=2,1"));
-    int code = modem.waitResponse(6000L, "+CIPGSMLOC: ");
-    if (code == 1)
-      gpsTime = modem.stream.readString();
-    modem.waitResponse(); // await OK
-    Serial.printf("[ MODEM  ] CIPGSMLOC: %s\n", gpsTime.c_str());
-    uptime.parseModemTime(gpsTime.c_str());
+    bool connect = false;
+    if (!modem.isGprsConnected())
+    {
+      connect = modem.gprsConnect("iot.1nce.net");
+    }
+    else
+      connect = true;
+
+    if (connect)
+    {
+      modem.sendAT(GF("+CIPGSMLOC=2,1"));
+      int code = modem.waitResponse(6000L, "+CIPGSMLOC: ");
+      if (code == 1)
+        gpsTime = modem.stream.readString();
+      modem.waitResponse(); // await OK
+      Serial.printf("[ MODEM  ] CIPGSMLOC: %s\n", gpsTime.c_str());
+      uptime.parseModemTime(gpsTime.c_str());
+    }
+    else
+    {
+      Serial.println("[ MODEM  ] GPRS connection not available");
+    }
   }
 }
 
@@ -452,7 +467,7 @@ void updateScreen()
   if (smsText == "")
     display.print("-----------");
   else
-    display.print(smsTime);
+    display.printf("%s UTC", smsTime.c_str());
 
   display.setFont(&LiberationSansNarrow_Regular9pt8b);
   display.setTextColor(GxEPD_BLACK);
@@ -536,7 +551,21 @@ void updateScreen()
     display.drawBitmap(slideshow.at(counter300s % slideshow.size()).black, 0, 0, 400, 300, BLACK, display.bm_invert | display.bm_transparent);
   }
 
-  display.update();
+  // apply blank screen for a while every day to negate burn-in effects
+  if (tm->tm_hour >= 1 && tm->tm_hour < 2)
+  {
+    Serial.print(" refresh cycle active");
+    display.fillScreen(WHITE);
+  }
+
+  if (tm->tm_hour >= 2 && tm->tm_hour < 5)
+  {
+    Serial.print(" screensaver active");
+  }
+  else
+  {
+    display.update();
+  }
 }
 
 /**
@@ -754,7 +783,7 @@ void loop()
       // FIXME: Filter high-frequency noise somehow
 
       // apply compression (Ramer-Douglas-Peucker)
-      tempStats.compact(0.05);
+      tempStats.compact(0.03);
       humStats.compact(0.2);
       pressStats.compact(0.05);
 
@@ -781,7 +810,7 @@ void loop()
     {
       // Hacky... ¯\_(ツ)_/¯
       gpsTime = "";
-    }    
+    }
     counter1h++;
   }
 
