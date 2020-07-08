@@ -85,8 +85,8 @@ void setup()
 
   // setup slideshow content
   Serial.println("[  INIT  ] Creating slideshow...");
-  slideshow.push_back(images.beer);
   slideshow.push_back(images.bmw);
+  slideshow.push_back(images.beer);
   slideshow.push_back(images.bruce);
   slideshow.push_back(images.yellowScreen);
   slideshow.push_back(images.coffin);
