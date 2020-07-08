@@ -4,6 +4,8 @@
 
 A legendary IoT monitoring station with e-Paper dashboard and anomaly-detection, NOT!
 
+![Screen sample](docs/screen.png)
+
 ## Getting started
 
  1. [Download Visual Studio Code](https://code.visualstudio.com/Download), install and run.
@@ -82,10 +84,11 @@ $ platformio remote agent start 2>&1 >/dev/null &
 
 ## References
 
-### ESP32
+### Arduino, ESP32
 
  - [ESP32 Pinout Reference](https://randomnerdtutorials.com/esp32-pinout-reference-gpios/)
  - [ESP-IDF Programming Guide](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/index.html)
+ - [Creating a Command Line Interface in Arduino’s Serial Monitor](https://www.norwegiancreations.com/2018/02/creating-a-command-line-interface-in-arduinos-serial-monitor/)
 
 ### SIM800L T-Call V1.3 ESP32
 
@@ -96,8 +99,12 @@ $ platformio remote agent start 2>&1 >/dev/null &
 ### Modem, GSM, Mobile Network
 
 - [Using SIM7020E to Connect to 1NCE NB-IoT Network](https://www.hackster.io/hhf/using-sim7020e-to-connect-to-1nce-nb-iot-network-bfd41a)
+- [SIM800L tracking your IoT device](https://marabesi.com/posts/2018/02/16/sim800l-tracking-your-iot-device.html)
 - [Sim800L time not updating to network time](https://stackoverflow.com/questions/55023587/sim800l-time-not-updating-to-network-time)
 - [SIM800L Modul Uhrzeit abfragen](https://www.mikrocontroller.net/topic/465585)
+- [SIM800 Series_AT Command Manual_V1.09 (PDF)](https://www.elecrow.com/wiki/images/2/20/SIM800_Series_AT_Command_Manual_V1.09.pdf)
+- [What AT command should be sent to modem to get time?](https://electronics.stackexchange.com/questions/82090/what-at-command-should-be-sent-to-modem-to-get-time)
+
 
 ### BME280 Environmental sensor
 

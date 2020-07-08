@@ -65,6 +65,17 @@ e-Paper Module | ESP32 | Color | Function | Note
 `RST`  | `GPIO 0` | white |  External reset pin | Low for reset
 `BUSY`  | `GPIO 2` | purple |  Busy state output pin | Low for busy
 
+## Power supply
+
+Depending on the hardware-setup you are using (incl. the USB-cable) the power supply **MIGHT** cause you some trouble when conecting to a 500mA-rated USB-port:
+
+- The modem returns invalid/strange characters when sending AT-commands via serial interface.
+- The modem can't connect to a network at all.
+- The modem takes a very long time (up to 60s) to establish a GPRS connection.
+- The BME280 environment sensor returns invalid data.
+
+To mitigate these issues, try a different USB-Port or connect to an external USB charger that can provide at least 1A.
+
 ## GxEPD E-Paper display library
 
 The [GxEPD E-Paper display library](https://github.com/ZinggJM/GxEPD) has some difficulties updating the screen due to the timing used in the wakeup-routine:
